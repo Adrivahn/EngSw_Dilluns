@@ -78,17 +78,14 @@ public class Main extends SimpleApplication implements ActionListener {
     private Rival rival;
     private WorldCreator world;
     private Spatial sceneModel;
-    private final float accelerationForce = 1000.0f;
-    private final float brakeForce = 100.0f;
+    //private final float accelerationForce = 1000.0f;
+    //private final float brakeForce = 100.0f;
     private CameraNode camNode;
     
     private MenuController menu;
     private Display display;
     
-    //Factores para disminuir y aumentar la acceleracion y la frenadas
-    private int accelerationFactor = 2; //Factor multiplicativo
-    private int brakeForceFactor = 2;   //Factor de division
-    private double reverseFactor = 8;    //Factor de division
+
     
 /*Variables per a moure el rival per a fer el crcuit. Cal moure-ho en mesura del que es pugui 
  * a dins de la classe Rival*/
@@ -144,7 +141,7 @@ public class Main extends SimpleApplication implements ActionListener {
         
         car = new VehicleProtagonista(getAssetManager(), getPhysicsSpace(), cam);
         ColorRGBA colorChasis = ColorRGBA.Orange;
-        ColorRGBA colorWheel = ColorRGBA.Gray;
+        ColorRGBA colorWheel = ColorRGBA.Black;
         car.buildCar(colorChasis, colorWheel);
          //Aqui creem la classe rival i la afegim al rootNode
         rival = new Rival(getAssetManager(), getPhysicsSpace());
@@ -190,71 +187,19 @@ public class Main extends SimpleApplication implements ActionListener {
 
     public void onAction(String binding, boolean value, float tpf) {
         if (binding.equals("Lefts")) {
-            
-            if (value) {
-                steeringValue += .5f;
-            } else {
-                steeringValue += -.5f;
-            }
-            car.getVehicle().steer(steeringValue);
+            car.turnLeft(value);
         } else if (binding.equals("Rights")) {
-            if (value) {
-                steeringValue += -.5f;
-            } else {
-                steeringValue += .5f;
-            }
-            car.getVehicle().steer(steeringValue);
+            car.turnRight(value);
         } else if (binding.equals("Ups")) {
-            if (value) {
-                car.setReverseMode(false);
-                accelerationValue = 0; //Reset the acceleration value
-                accelerationValue += (accelerationForce*accelerationFactor);
-            } else {
-                accelerationValue -= (accelerationForce*accelerationFactor);
-            }
-            //System.out.println("Accelerar "+accelerationValue);
-            //System.out.println("AcceleraForce "+accelerationForce);
-            car.getVehicle().accelerate(accelerationValue);
+            car.forward(value);
         } else if (binding.equals("Downs")) {
-            if (value) {
-                if(car.getReverseMode()){
-                     accelerationValue -= (accelerationForce/reverseFactor);
-                     car.getVehicle().accelerate(accelerationValue);
-                }else{
-                    if(car.getSpeed() < 5){
-                        car.setReverseMode(true);
-                        accelerationValue -= (accelerationForce/reverseFactor);
-                        car.getVehicle().accelerate(accelerationValue);
-                    }else{
-                        car.getVehicle().brake(brakeForce/brakeForceFactor);
-                    }
-                }
-                
-                if(car.getReverseMode()){
-                     accelerationValue -= (accelerationForce/reverseFactor);
-                     car.getVehicle().accelerate(accelerationValue);
-                }else{
-                    if(car.getSpeed() < 5){
-                        car.setReverseMode(true);
-                        accelerationValue -= (accelerationForce/reverseFactor);
-                        car.getVehicle().accelerate(accelerationValue);
-                    }else{
-                        car.getVehicle().brake(brakeForce/brakeForceFactor);
-                    }
-                }
-            } else {
-                car.getVehicle().brake(0f);
-            }
+            car.back(value);
         } else if (binding.equals("Reset")) {
-            if (value) {
-                car.getVehicle().setPhysicsLocation(Vector3f.ZERO);
-                car.getVehicle().setPhysicsRotation(new Matrix3f());
-                car.getVehicle().setLinearVelocity(Vector3f.ZERO);
-                car.getVehicle().setAngularVelocity(Vector3f.ZERO);
-                car.getVehicle().resetSuspension();
-            } else {
-            }
+            car.reset(value);
+        }else if (binding.equals("Space")) {
+            car.handBrake(value);
         }
+        
     }
     
     private void updateDisplay(){
