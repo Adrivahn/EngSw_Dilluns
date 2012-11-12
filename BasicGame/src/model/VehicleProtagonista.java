@@ -50,11 +50,12 @@ public class VehicleProtagonista {
     private final float brakeForce = 100.0f;
     //Factores para disminuir y aumentar la acceleracion y la frenadas
     private int accelerationFactor = 2; //Factor multiplicativo
-    private int brakeForceFactor = 3;   //Factor de division
-    private double reverseFactor = 4;    //Factor de division
+    private int brakeForceFactor = 1;   //Factor de division
+    private double reverseFactor = 1.5;    //Factor de multiplicacio
     //Variable per saber si estas en mode normal o marcha atras.
     private boolean reverseMode = false;
-    private boolean handBrake = false;
+    private boolean handBrakeMode  = false;
+    private boolean forwardMode = false;
 
     public VehicleProtagonista(AssetManager asset, PhysicsSpace phy, Camera cam) {
         assetManager = asset;
@@ -80,7 +81,7 @@ public class VehicleProtagonista {
     }
 
     public void buildCar(ColorRGBA colorChasis, ColorRGBA colorWheel) {
-        mass = 400;
+        mass = 600;
         Material matChasis = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         Material matWheel = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         //mat.getAdditionalRenderState().setWireframe(true);
@@ -228,50 +229,33 @@ public class VehicleProtagonista {
     }
 
     public void forward(boolean value) {
-        System.out.println("Forward");
+        accelerationValue = 0;
         if (value) {
-            System.out.println("1---");
-            if(!handBrake){
+            forwardMode = true;
+            if(!handBrakeMode){
                 reverseMode = false;
-                System.out.println("Hand brake "+handBrake);
-                System.out.println("Acceleration without hand brake");
-                accelerationValue = 0;
-                accelerationValue += (accelerationForce * accelerationFactor);
-                
-            } else {
-                accelerationValue = 0;
+                accelerationValue += (accelerationForce * accelerationFactor);                
             }
             vehicle.accelerate(accelerationValue);
         } else {
-            if(!handBrake){
-                if(accelerationValue != 0){
-                    accelerationValue -= (accelerationForce * accelerationFactor);
-                }
-            } else {
-                accelerationValue = 0;
-            }
+            if(!handBrakeMode && accelerationValue!=0){
+                accelerationValue -= (accelerationForce * accelerationFactor);
+            } 
             vehicle.accelerate(accelerationValue);
+            forwardMode = false;
         }
-
     }
 
     public void back(boolean value) {
         float valueBrake;
-        if (value) {
-            if (reverseMode) {
+        if(!handBrakeMode){
+            if (value) {
                 reverse();
             } else {
-                if (getSpeed() < 5) {
-                    reverseMode = true;
-                    reverse();
-                } else {
-                    valueBrake = brakeForce / brakeForceFactor;
-                    brake(valueBrake);
-                }
+                reverseMode = false;
+                vehicle.accelerate(0f);
+                brake(0f);
             }
-        } else {
-            reverseMode = false;
-            vehicle.accelerate(0f);
         }
     }
 
@@ -285,15 +269,23 @@ public class VehicleProtagonista {
             accelerationValue = 0;
             steeringValue = 0;
             reverseMode = false;
-            handBrake = false;
+            handBrakeMode = false;
+            forwardMode = false;
             vehicle.accelerate(0f);
         } else {
         }
     }
 
     public void reverse() {
-        accelerationValue -= (accelerationForce / reverseFactor);
-        vehicle.accelerate(accelerationValue);
+        float valueBrake;
+        if (getSpeed() > 5) {
+            valueBrake = brakeForce / brakeForceFactor;
+            brake(valueBrake);
+        }else{
+            reverseMode = true;
+            accelerationValue -= (accelerationForce * reverseFactor);
+            vehicle.accelerate(accelerationValue);
+        }
     }
 
     public void brake(float valueBrake) {
@@ -302,17 +294,34 @@ public class VehicleProtagonista {
     
     public void handBrake(boolean value){
         float valueBrake;
-        handBrake = true;
-        accelerationValue = 0;
-        vehicle.accelerate(accelerationValue);
-        if(value){
-            System.out.println("Method Hand brake true");
-            valueBrake = brakeForce*100;
-            brake(valueBrake);
-        } else {;
-            brake(0f);
+        if(!reverseMode){
+            if(value){
+                handBrakeMode = true;
+                if(forwardMode && accelerationValue!=0){
+                    accelerationValue -= (accelerationForce * accelerationFactor);
+                    vehicle.accelerate(accelerationValue); 
+                }
+                valueBrake = brakeForce;
+                brake(valueBrake);
+            } else {;
+                handBrakeMode = false; 
+                brake(0f); 
+                if(forwardMode){
+                    forward(true);
+                }
+            }
+        }else{
+            if(value){
+                accelerationValue += (accelerationForce * reverseFactor);
+                vehicle.accelerate(accelerationValue);
+                valueBrake = brakeForce;
+                brake(valueBrake);
+            } else {
+                brake(0f);
+                back(true);
+            }
         }
-        handBrake = false; 
+        
     }
 
     public void setReverseMode(boolean value) {

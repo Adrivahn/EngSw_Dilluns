@@ -277,7 +277,7 @@ public class Main extends SimpleApplication implements ActionListener {
                // System.out.println("Vector :\t"+r+"\n");
                 
                 if (r.getX()>+.2f && r.getY()<-.9f) {
-                    System.out.println(r);
+                    //System.out.println(r);
                     //System.out.println("recta 3");
                     estado = 6;
                     rival.getVehicle().steer(0);
