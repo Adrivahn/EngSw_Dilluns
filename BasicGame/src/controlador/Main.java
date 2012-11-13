@@ -228,7 +228,6 @@ public class Main extends SimpleApplication implements ActionListener {
         flyCam.setEnabled(false);
         
         camNode.lookAt(car.getSpatial().getWorldTranslation(), Vector3f.UNIT_Y);
-        
         camNode.setLocalTranslation(car.getSpatial().localToWorld( new Vector3f( 0, 4, -15), null));
         //System.out.println(car.getVehicle().getPhysicsLocation().getX());
         /*Codi per a moure el rival, cal moure-ho d'aqui*/

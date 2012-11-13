@@ -184,7 +184,6 @@ public class VehicleProtagonista {
         vehicle.getWheel(0).setFrictionSlip(9.8f);
         vehicle.getWheel(1).setFrictionSlip(9.8f);
 
-
         //rootNode.attachChild(vehicleNode);
 
         physicsSpace.add(vehicle);
@@ -301,11 +300,16 @@ public class VehicleProtagonista {
                     accelerationValue -= (accelerationForce * accelerationFactor);
                     vehicle.accelerate(accelerationValue); 
                 }
-                valueBrake = brakeForce;
-                brake(valueBrake);
+                //valueBrake = brakeForce;
+                //brake(valueBrake);
+                //vehicle.brake(vehicle.getWheel(0)., brakeForce*100);
+                vehicle.brake(0, brakeForce*5);
+                vehicle.brake(1, brakeForce*5);
             } else {;
                 handBrakeMode = false; 
-                brake(0f); 
+                //brake(0f); 
+                vehicle.brake(0, 0);
+                vehicle.brake(1, 0);
                 if(forwardMode){
                     forward(true);
                 }
@@ -320,8 +324,7 @@ public class VehicleProtagonista {
                 brake(0f);
                 back(true);
             }
-        }
-        
+        } 
     }
 
     public void setReverseMode(boolean value) {

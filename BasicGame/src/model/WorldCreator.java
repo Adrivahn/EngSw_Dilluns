@@ -133,8 +133,8 @@ public class WorldCreator {
         // to make them appear in the game world.
         rootNode.attachChild(sceneModel);
         space.getPhysicsSpace().add(sceneModel);
-        rootNode.attachChild(boundsModel);
-        space.getPhysicsSpace().add(boundsModel);
+        //rootNode.attachChild(boundsModel);
+        //space.getPhysicsSpace().add(boundsModel);
         
         //wall creation
         crearMur(-2,-5,10);
