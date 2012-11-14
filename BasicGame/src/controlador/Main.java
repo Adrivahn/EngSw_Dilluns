@@ -1,34 +1,3 @@
-/*
- * Copyright (c) 2009-2010 jMonkeyEngine
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- * * Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- *
- * * Neither the name of 'jMonkeyEngine' nor the names of its contributors
- *   may be used to endorse or promote products derived from this software
- *   without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package controlador;
 
 import com.jme3.app.SimpleApplication;
@@ -41,11 +10,9 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Matrix3f;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.CameraNode;
-import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import model.Rival;
 import model.VehicleProtagonista;
@@ -61,21 +28,21 @@ public class Main extends SimpleApplication implements ActionListener {
     private VehicleProtagonista car;
     private Rival rival;
     private WorldCreator world;
-    private Spatial sceneModel;
     private final float accelerationForce = 1000.0f;
     private final float brakeForce = 100.0f;
     private CameraNode camNode;
     
     private MenuController menu;
     private Display display;
+    private boolean gameStarted = false;
     
     //Factores para disminuir y aumentar la acceleracion y la frenadas
     private int accelerationFactor = 2; //Factor multiplicativo
     private int brakeForceFactor = 2;   //Factor de division
-    private boolean juegoStart = false;
     
-/*Variables per a moure el rival per a fer el crcuit. Cal moure-ho en mesura del que es pugui 
- * a dins de la classe Rival*/
+    
+    /*Variables per a moure el rival per a fer el crcuit. Cal moure-ho en mesura del que es pugui 
+    * a dins de la classe Rival*/
     int estado=1;
     public Vector3f direccioCar;
     public Vector3f direccioRival;
@@ -117,9 +84,9 @@ public class Main extends SimpleApplication implements ActionListener {
          * 
          */
         setupKeys();
-        setUpLight();               
-        display = new Display(assetManager,settings,guiNode,this.timer);
+        setUpLight();     
         
+        display = new Display(assetManager,settings,guiNode,this.timer);        
         menu = new MenuController(settings,stateManager,assetManager,rootNode,guiViewPort,inputManager,audioRenderer,this,false,1,0,5,2,1,10,1,0,1,0,0,0,0);   
     }
 
@@ -141,61 +108,22 @@ public class Main extends SimpleApplication implements ActionListener {
 
     public void onAction(String binding, boolean value, float tpf) {
         if (binding.equals("Lefts")) {
-            if (value) {
-                steeringValue += .5f;
-            } else {
-                steeringValue += -.5f;
-            }
-            car.getVehicle().steer(steeringValue);
+            car.turnLeft(value);
         } else if (binding.equals("Rights")) {
-            if (value) {
-                steeringValue += -.5f;
-            } else {
-                steeringValue += .5f;
-            }
-            car.getVehicle().steer(steeringValue);
+            car.turnRight(value);
         } else if (binding.equals("Ups")) {
-            if (value) {
-                accelerationValue += (accelerationForce*accelerationFactor);
-            } else {
-                accelerationValue -= (accelerationForce*accelerationFactor);
-            }
-            System.out.println("Accelerar "+accelerationValue);
-            System.out.println("AcceleraForce "+accelerationForce);
-            car.getVehicle().accelerate(accelerationValue);
+            car.forward(value);
         } else if (binding.equals("Downs")) {
-            if (value) {
-                car.getVehicle().brake(brakeForce/brakeForceFactor);
-            } else {
-                car.getVehicle().brake(0f);
-            }
+            car.back(value);
         } else if (binding.equals("Reset")) {
-            if (value) {
-                System.out.println("Reset");
-                car.getVehicle().setPhysicsLocation(Vector3f.ZERO);
-                car.getVehicle().setPhysicsRotation(new Matrix3f());
-                car.getVehicle().setLinearVelocity(Vector3f.ZERO);
-                car.getVehicle().setAngularVelocity(Vector3f.ZERO);
-                car.getVehicle().resetSuspension();
-            } else {
-            }
+            car.reset(value);
+        }else if (binding.equals("Space")) {
+            car.handBrake(value);
         }
-    }
+        
+    }     
     
-    private void updateDisplay(){
-        if (menu.isGameStarted() && !display.isDisplayAdded()){
-            float minDimension = Math.min(settings.getWidth(),settings.getHeight());
-            display.addDisplay((int)(settings.getWidth()-(minDimension/2.5f)/2),(int)((minDimension/2.5f)/2),2.5f,(int)(settings.getWidth()-(minDimension/40f)-(minDimension/11.42f)-10),(int)(settings.getHeight()*0.975f),40,(int)(settings.getWidth()-(minDimension/9.23f)-10),(int)(settings.getHeight()*0.95f),9.23f,(int)(settings.getWidth()-(minDimension/11.42f)-10),(int)(settings.getHeight()*0.85f),11.42f);
-            display.startChronograph();
-            display.updatePosition(1);
-        }
-        else if (menu.isGameStarted()){
-            display.updateDisplay((float)Math.sqrt((Math.pow(car.getVehicle().getLinearVelocity().x,2)+Math.pow(car.getVehicle().getLinearVelocity().z,2)+Math.pow(car.getVehicle().getLinearVelocity().y,2))));
-            display.updateChronograph();
-            display.updatePosition(1);
-        }
-    } 
-     /*Metode per comprovar que el cotxe protagonista esta en moviment*/
+    /*Metode per comprovar que el cotxe protagonista esta en moviment*/
     public boolean comprovaMoviment (){
         if (car.getVehicle().getLinearVelocity().length()>=5) {
             return true;
@@ -208,14 +136,15 @@ public class Main extends SimpleApplication implements ActionListener {
         
         flyCam.setEnabled(false);
         
-        if(menu.isGameStarted() && !juegoStart){
-            isWorld();
-            isProtagonista();
-            isRival();
-            juegoStart = true;          
+        if(menu.isMenuFinished() && !gameStarted){
+            addWorld();            
+            addProtagonista();
+            addRival();
+            addDisplay();
+            gameStarted = true;          
         }
         
-        if(juegoStart){
+        if(gameStarted){
             camNode.lookAt(car.getSpatial().getWorldTranslation(), Vector3f.UNIT_Y);
             
             camNode.setLocalTranslation(car.getSpatial().localToWorld( new Vector3f( 0, 4, -15), null));
@@ -313,24 +242,29 @@ public class Main extends SimpleApplication implements ActionListener {
                     break;    
                 default:
             }
-                
+            
+            display.updateDisplay(car.getSpeed(),1);            
         }
 
-        updateDisplay();
     }
     
     // Añadir aqui los gets necesarios que cada uno necesite para su constructor
-    // ej : menu.getCarColor()
+    // ej : menu.getCarColorRGBA()
     
-    private void isWorld(){
+    private void addWorld(){
         //Cargamos la escena
         world = new WorldCreator(rootNode, assetManager, bulletAppState, this.viewPort);
         world.createWorld();
     }
     
-    private void isProtagonista(){
+    private void addDisplay(){        
+        float minDimension = Math.min(settings.getWidth(),settings.getHeight());
+        display.addDisplay((int)(settings.getWidth()-(minDimension/2.5f)/2),(int)((minDimension/2.5f)/2),2.5f,(int)(settings.getWidth()-(minDimension/40f)-(minDimension/11.42f)-10),(int)(settings.getHeight()*0.975f),40,(int)(settings.getWidth()-(minDimension/9.23f)-10),(int)(settings.getHeight()*0.95f),9.23f,(int)(settings.getWidth()-(minDimension/11.42f)-10),(int)(settings.getHeight()*0.85f),11.42f);        
+    }
+    
+    private void addProtagonista(){
         car = new VehicleProtagonista(getAssetManager(), getPhysicsSpace(), cam);
-        car.buildCar();
+        car.buildCar(menu.getCarColorRGBA(),menu.getCarColorRGBA());
         car.getVehicle().setPhysicsLocation(new Vector3f(0.f,-4.f,0.f));
         
         //Añadimos el coche protagonista
@@ -348,7 +282,7 @@ public class Main extends SimpleApplication implements ActionListener {
     }
     
     
-    private void isRival(){
+    private void addRival(){
         //Aqui creem la classe rival i la afegim al rootNode
         rival = new Rival(getAssetManager(), getPhysicsSpace());
         rival.buildCar();
