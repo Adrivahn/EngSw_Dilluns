@@ -31,6 +31,7 @@ import com.jme3.scene.shape.Box;
 import com.jme3.shadow.BasicShadowRenderer;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
+import java.util.ArrayList;
 
 /**
  *
@@ -56,6 +57,13 @@ public class WorldCreator {
     private Material mat_snow;
     private Material mat_rain;
     private Material mat_bounds;
+    
+    public Vector3f[] coordenadesLimitEsquerraRecta1 = new Vector3f[10];
+    public ArrayList coordenadesLimitEsquerraRecta2 = new ArrayList();
+    public ArrayList coordenadesLimitEsquerraRecta3 = new ArrayList();
+    public ArrayList coordenadesLimitEsquerraRecta4 = new ArrayList();
+    public ArrayList coordenadesCurvesRecta1=new ArrayList();
+   
 
     /**
      * creates a simple physics test world with a floor, an obstacle and some test boxes
@@ -70,6 +78,17 @@ public class WorldCreator {
         this.space = space;
         this.viewPort = viewPort;
         initMaterial();
+        this.coordenadesLimitEsquerraRecta1[0]=new Vector3f(15.f, -5.f, 35.f);
+        this.coordenadesLimitEsquerraRecta1[1]=new Vector3f(15.f, -5.f, 20.f);
+        this.coordenadesLimitEsquerraRecta1[2]=new Vector3f(15.f, -5.f, 5.f);
+        this.coordenadesLimitEsquerraRecta1[3]=new Vector3f(15.f, -5.f, -10.f);
+        this.coordenadesLimitEsquerraRecta1[4]=new Vector3f(15.f, -5.f, -25.f);
+        this.coordenadesLimitEsquerraRecta1[5]=new Vector3f(15.f, -5.f, -40.f);
+        this.coordenadesCurvesRecta1.add(new Vector3f (0.f, -5.f,40.f));
+        this.coordenadesCurvesRecta1.add(new Vector3f(-55.f,-5.f,40.f));
+        this.coordenadesCurvesRecta1.add(new Vector3f(-55.f, -5.f,-55.f));
+        this.coordenadesCurvesRecta1.add(new Vector3f(0.f,-5.f,-55.f));
+        
         
     }
     
@@ -137,8 +156,8 @@ public class WorldCreator {
         space.getPhysicsSpace().add(boundsModel);
         
         //wall creation
-        crearMur(-2,-5,10);
-        crearMur(-55,-5,-15);
+        //crearMur(-2,-5,10);
+        //crearMur(-55,-5,-15);
 
         //Obstacle creation
         crearCaixa(2,-2,-10);

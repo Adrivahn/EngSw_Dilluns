@@ -13,6 +13,8 @@ import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
+import com.jme3.math.Matrix3f;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
@@ -37,14 +39,24 @@ public class Rival {
     public float acceleracio;   //Variable de control de la velocitat màxima
     public float velocitat;   //Variable de control de la velocitat mínima
     public float gir;
+    public WorldCreator world;
+    
+    private int estat=1;
+    private Vector2f dirActual = new Vector2f(0.f,0.f); //direccio del rival
+    private Vector2f dirIdeal = new Vector2f(0.f,0.f);  //direccio a la que a de encararse
+    private boolean error= false;       //per a controlar el error de les rodes en el vector direccio
+    private boolean enMoviment= false;  //per a controlar els resets
+    boolean pasPuntFinal= false;        //per a controlar que segueixi recitifcant quan toca
+    boolean rectificarRectaAEsquerra=false;
+    boolean rectificarRectaADreta=false;
     
     //Constructor
-    public Rival(AssetManager asset, PhysicsSpace phy){
+    public Rival(AssetManager asset, PhysicsSpace phy,WorldCreator w){
         assetManager = asset;
         physicsSpace = phy;
         velocitat = 0;
         gir = 0;
-        
+        world = w;
     }
     
     private Geometry findGeom(Spatial spatial, String name) {
@@ -186,20 +198,25 @@ public class Rival {
         if (vehicle.getLinearVelocity().length()<15) {
             vehicle.accelerate(800.0f);
         } else {
+            //System.out.println(vehicle.getLinearVelocity().length());
             vehicle.accelerate(0);
+            enMoviment=true;
         }   
     }
     public void moureEndarrere(){
         velocitat = -10;
     }
+    
     public void moureEsquerra(){
         gir = .5f;
     }
-    public void girarCurva1(){
-        //System.out.println(vehicle.getLinearVelocity().length());
+    
+    public void girarCurvaDreta(){
         if (vehicle.getLinearVelocity().length()<70 && vehicle.getLinearVelocity().length()>10) {
             System.out.println("frenant");
-            vehicle.brake(100f);
+            vehicle.accelerate(0);
+            vehicle.brake(100.0f);
+            System.out.println(vehicle.getLinearVelocity().length());
         } else if (vehicle.getLinearVelocity().length()>=3 && vehicle.getLinearVelocity().length()<=10){
             System.out.println("girant");
             vehicle.steer(-.5f);
@@ -211,9 +228,218 @@ public class Rival {
         }
     
     }
+    public void girarCurvaEsquerra(){
+        if (vehicle.getLinearVelocity().length()<70 && vehicle.getLinearVelocity().length()>10) {
+            System.out.println("frenant");
+            vehicle.accelerate(0);
+            vehicle.brake(100.0f);
+            System.out.println(vehicle.getLinearVelocity().length());
+        } else if (vehicle.getLinearVelocity().length()>=3 && vehicle.getLinearVelocity().length()<=10){
+            System.out.println("girant");
+            vehicle.steer(+.5f);
+            vehicle.brake(0f);
+        }else{
+            
+            System.out.println("accelerar");
+            vehicle.accelerate(100f);
+            vehicle.brake(0f);
+        }
+    
+    }
     
     //Mètode que s'alimenta dels mètodes de moviment bàsic per a moure el cotxe aleatoriament
     public void frenar(){
         velocitat = velocitat - acceleracio/2;
+    }
+    public float getDistancia (Vector3f pto) {
+        Vector3f posRival= this.getVehicle().getPhysicsLocation();
+        float distancia= pto.distance(posRival);
+        return distancia;
+    }
+    public void rectificarLimitEsquerra (int estatAnterior,Vector3f pto,boolean seguent) {
+        float angleActual = calcular_angle_direccions(pto); /*nou angle despres de girar*/
+        //System.out.println("angleeeee="+angleActual);
+        if ((error==false) && (angleActual<352.f && angleActual > 8.f)){
+                System.out.println("angleeeee ="+angleActual);
+                girarCurvaDreta();    
+        } else {
+            girarCurvaDreta();
+            System.out.println("ANGLEEEEE error ="+angleActual);
+            error=true;
+            if (angleActual<350.f && angleActual > 10.f){           
+                //if (seguent==true) {
+                    pasPuntFinal= false;
+                    rectificarRectaAEsquerra=false;
+                    rectificarRectaADreta=false;
+                    if(estat==4) {
+                        estat=1;
+                    } else {
+                        estat=estatAnterior+1;
+                        System.out.println("error ULTIIIIIM");
+                    }
+                //}
+                vehicle.steer(0.f);
+                error=false;
+            }
+            System.out.println("rectificant error de rodeeees");        
+        }  
+    }
+
+    public void rectificarLimitDreta (int estatAnterior,Vector3f pto,boolean seguent) {
+        float angleActual = calcular_angle_direccions(pto); /*nou angle despres de girar*/
+        //System.out.println("angleeeee="+angleActual);
+        if ((error==false) && (angleActual<352.f && angleActual > 8.f)){
+                System.out.println("angleeeee ="+angleActual);
+                girarCurvaEsquerra();    
+        } else {
+            System.out.println("ANGLEEEEE error ="+angleActual);
+            error=true;
+            if (angleActual<350.f && angleActual > 10.f){           
+                //if (seguent==true) {
+                    pasPuntFinal= false;
+                    rectificarRectaAEsquerra=false;
+                    rectificarRectaADreta=false;
+                    if(estat==4) {
+                        estat=1;
+                    } else {
+                        estat=estatAnterior+1;
+                        System.out.println("error ULTIIIIIM");
+                    }
+                //}
+                vehicle.steer(0.f);
+                error=false;
+            }
+            System.out.println("rectificant error de rodeeees");        
+        }
+        
+    }
+    
+    public float calcular_angle_direccions (Vector3f pto) {
+        dirActual.setX(this.getVehicle().getLinearVelocity().getX());
+        dirActual.setY(this.getVehicle().getLinearVelocity().getZ());
+        dirActual = dirActual.normalize();
+                
+        dirIdeal.setX(pto.getX()-this.getVehicle().getPhysicsLocation().getX()); 
+        dirIdeal.setY(pto.getZ()-this.getVehicle().getPhysicsLocation().getZ());
+        dirIdeal=dirIdeal.normalize();
+                
+        float angleRadians= dirActual.angleBetween(dirIdeal);
+        
+        angleRadians= (angleRadians*180.f)/(float)Math.PI;
+        if (angleRadians<0.f) {
+            return 360.f+angleRadians;
+        } else {
+            return angleRadians;
+        }
+    }
+    
+    public void reset_rival(Vector3f pto) {
+        vehicle.setPhysicsLocation(new Vector3f (0,-5,0));
+        vehicle.setPhysicsRotation(new Matrix3f());
+        vehicle.setLinearVelocity(Vector3f.ZERO);
+        vehicle.setAngularVelocity(Vector3f.ZERO);
+        vehicle.resetSuspension();
+        enMoviment=false;
+        pasPuntFinal= false;
+        error=false;
+        estat=1;
+        vehicle.steer(0.f);
+        rectificarRectaAEsquerra=false;
+        rectificarRectaADreta=false;
+    }
+    
+    public void rutina() {
+        switch (estat) {
+            case 1:
+                Vector3f puntAnterior = new Vector3f(5.f, -5.f,-55.f);
+                Vector3f puntFinal = new Vector3f(5.f, -5.f,42.f);   /*(0,42) es el pto de referencia del final de la recta*/
+                Vector3f puntSeguent = new Vector3f(-55.f, -5.f,42.f);
+                float angle = calcular_angle_direccions(puntFinal);
+                if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
+                    reset_rival(puntAnterior);
+                }
+                if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {
+                    rectificarRectaADreta=false;
+                    rectificarRectaAEsquerra=false;
+                    pasPuntFinal= true;
+                    System.out.println("curva 111111111111");
+                    rectificarLimitEsquerra(estat,puntSeguent,true);
+                } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) {
+                    rectificarRectaADreta=true;
+                    System.out.println("rectifiquem recta 1 gir a la dreta");
+                    rectificarLimitEsquerra(estat,puntFinal,false);
+                } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
+                    rectificarRectaAEsquerra=true;
+                    System.out.println("rectifiquem recta 1 gir a la esquerra");
+                    rectificarLimitDreta(estat,puntFinal,false);
+                } else {
+                    moureEndavant();
+                }
+                break;
+                
+            case 2:
+                puntAnterior = new Vector3f(5.f, -5.f,42.f);
+                puntFinal = new Vector3f(-55.f, -5.f,42.f);
+                puntSeguent = new Vector3f(-55.f, -5.f,-55.f);
+                angle = calcular_angle_direccions(puntFinal);
+                
+                if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
+                    reset_rival(puntAnterior);
+                }
+                if (this.getDistancia(puntFinal)<=10.f || pasPuntFinal==true) {
+                    pasPuntFinal= true;
+                    System.out.println("curva 22222222222");
+                    rectificarLimitEsquerra(estat,puntSeguent,true);
+                } else {
+                    /*if (angle>15.f && pasPuntFinal == false) {
+                        System.out.println("rectifiquem recta 1");
+                        rectificarLimitEsquerra(estat,puntFinal,false);
+                    }*/
+                    moureEndavant();
+                }            
+                break;
+            case 3:
+                puntAnterior = new Vector3f(-55.f, -5.f,42.f);
+                puntFinal = new Vector3f(-55.f, -5.f,-60.f);
+                puntSeguent = new Vector3f(0.f, -5.f,-60.f);
+                angle = calcular_angle_direccions(puntFinal);
+                if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
+                    reset_rival(puntAnterior);
+                }
+                if (this.getDistancia(puntFinal)<=10.f || pasPuntFinal==true) {
+                    pasPuntFinal= true;
+                    System.out.println("curva 3333333333333");
+                    rectificarLimitEsquerra(estat,puntSeguent,true);
+                } else {
+                    /*if (angle>15.f && pasPuntFinal == false) {
+                        System.out.println("rectifiquem recta 1");
+                        rectificarLimitEsquerra(estat,puntFinal,false);
+                    }*/
+                    moureEndavant();
+                }
+                break;
+            case 4:
+                puntAnterior = new Vector3f(-55.f, -5.f,-60.f);
+                puntFinal = new Vector3f(5.f, -5.f,-55.f);
+                puntSeguent = new Vector3f(0.f, -5.f,40.f); 
+                angle = calcular_angle_direccions(puntFinal);
+                if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
+                    reset_rival(puntAnterior);
+                }
+                if (this.getDistancia(puntFinal)<=10.f || pasPuntFinal==true) {
+                    pasPuntFinal= true;
+                    System.out.println("curva 44444444444444");
+                    rectificarLimitEsquerra(estat,puntSeguent,true);
+                } else {
+                    /*if (angle>15.f && pasPuntFinal == false) {
+                        System.out.println("rectifiquem recta 1");
+                        rectificarLimitEsquerra(estat,puntFinal,false);
+                    }*/
+                    moureEndavant();
+                }
+                break;  
+            default:
+                
+        }
     }
 }
