@@ -51,7 +51,7 @@ public class Rival {
     boolean rectificarRectaADreta=false;
     
     //Constructor
-    public Rival(AssetManager asset, PhysicsSpace phy,WorldCreator w){
+    public Rival(AssetManager asset, PhysicsSpace phy,WorldCreator w){          /*la idea es passar el world on contingi a la llarga les coordenades del mon*/
         assetManager = asset;
         physicsSpace = phy;
         velocitat = 0;
@@ -173,19 +173,19 @@ public class Rival {
     //#################################################################
     
     //Getter del cotxe en si, s'utilitza per a obtenir-lo desde el main
-    public Spatial getSpatial(){
+    public Spatial getSpatial(){           /*conte el cotxe en si com a conjunt d'objectes geometrics*/
         return (Spatial)vehicleNode;
     }
-    public VehicleControl getVehicle() {
+    public VehicleControl getVehicle() {       /* conte tota la llibreria de les fisiques que apliquem*/
         return vehicle;
     }
     
-    public float getAcceleracio(){
+    private float getAcceleracio(){
         return acceleracio;
     }
     
-    public float getVelocitat(){
-        return velocitat;
+    private float getVelocitat(){                               /*retornem la velocitat de la direccio de les coordenades en valor unic*/
+        return this.getVehicle().getLinearVelocity().length();
     }
     //#################################################################
     //Metodes per a moure el cotxe de forma aleatoria (probablement no vagin aqui)
@@ -193,30 +193,26 @@ public class Rival {
     
     //Mètodes de moviment bàsic, endavant, endarrere, esquerra i dreta :
     
-    public void moureEndavant(){
+    private void moureEndavant(){           /* si no te cap desviacio a la direccio utilitzarem aquesta funcio*/
         vehicle.brake(0f);
-        if (vehicle.getLinearVelocity().length()<15) {
+        if (vehicle.getLinearVelocity().length()<15) {      /*si el cotxe va mes lent de 15 accelerem*/
             vehicle.accelerate(800.0f);
         } else {
             //System.out.println(vehicle.getLinearVelocity().length());
             vehicle.accelerate(0);
-            enMoviment=true;
+            enMoviment=true;                                /* per comprobar el primer moviment de tots*/
         }   
     }
-    public void moureEndarrere(){
+    public void moureEndarrere(){       /* no s'utilitza de moment*/
         velocitat = -10;
     }
     
-    public void moureEsquerra(){
-        gir = .5f;
-    }
-    
-    public void girarCurvaDreta(){
+    public void girarCurvaDreta(){      /* si va massa rapid per girar el frenem, massa lent accelerem i sino girem*/
         if (vehicle.getLinearVelocity().length()<70 && vehicle.getLinearVelocity().length()>10) {
             System.out.println("frenant");
             vehicle.accelerate(0);
             vehicle.brake(100.0f);
-            System.out.println(vehicle.getLinearVelocity().length());
+            //System.out.println(vehicle.getLinearVelocity().length());
         } else if (vehicle.getLinearVelocity().length()>=3 && vehicle.getLinearVelocity().length()<=10){
             System.out.println("girant");
             vehicle.steer(-.5f);
@@ -228,7 +224,7 @@ public class Rival {
         }
     
     }
-    public void girarCurvaEsquerra(){
+    public void girarCurvaEsquerra(){ /* = k el girarcurvadreta, seria interesant unificar els dos metodes a la llarga i pasarli per parametre dreta o eskerra*/
         if (vehicle.getLinearVelocity().length()<70 && vehicle.getLinearVelocity().length()>10) {
             System.out.println("frenant");
             vehicle.accelerate(0);
@@ -247,37 +243,37 @@ public class Rival {
     
     }
     
-    //Mètode que s'alimenta dels mètodes de moviment bàsic per a moure el cotxe aleatoriament
-    public void frenar(){
-        velocitat = velocitat - acceleracio/2;
-    }
-    public float getDistancia (Vector3f pto) {
+    public float getDistancia (Vector3f pto) { /*busquem la distancia del rival al pto del parametre*/
         Vector3f posRival= this.getVehicle().getPhysicsLocation();
         float distancia= pto.distance(posRival);
         return distancia;
     }
-    public void rectificarLimitEsquerra (int estatAnterior,Vector3f pto,boolean seguent) {
-        float angleActual = calcular_angle_direccions(pto); /*nou angle despres de girar*/
+    public void rectificarLimitEsquerra (int estatAnterior,Vector3f pto,boolean seguent) { /* a la llarga es podra unificar els dos metodes de rectificar afegint per parametre dreta o eskerra*/
+        float angleActual = calcular_angle_direccions(pto); /*nou angle de desviament mentre's girem*/
         //System.out.println("angleeeee="+angleActual);
-        if ((error==false) && (angleActual<352.f && angleActual > 8.f)){
+        if ((error==false) && (angleActual<352.f && angleActual > 8.f)){ 
+        /*el error es un error imposible d'evitar ja que quan calcules la direccio del cotxe medeix la direccio de les rodes i si estic girant s'incrementa inevitablement amb 10º aproximadament*/
                 System.out.println("angleeeee ="+angleActual);
-                girarCurvaDreta();    
+                girarCurvaDreta();   
+        /*per lo tant girarem fins a arribar a 0º i despres continuarem girant fins a aconseguir el error calculat a ull*/
         } else {
+            /*aqui es suposa que està rectificant el error de les rodes ja que està casi encarat del tot*/
             girarCurvaDreta();
             System.out.println("ANGLEEEEE error ="+angleActual);
             error=true;
             if (angleActual<350.f && angleActual > 10.f){           
-                //if (seguent==true) {
-                    pasPuntFinal= false;
-                    rectificarRectaAEsquerra=false;
-                    rectificarRectaADreta=false;
+                /*si hem aconseguit corregir l'error parem de girar i avisem que ja no estem modificant la direccio*/
+                rectificarRectaAEsquerra=false; /*estiguem rectificant una recta o girant una curva avisem que ja estem*/
+                rectificarRectaADreta=false;
+                if (seguent==true) {    /*si es tracta d'una curva anem al estat seguent*/
+                    pasPuntFinal= false;    /*aquesta variable controla si hem pogut arribar al punt de desti*/
+                    System.out.println("error ULTIIIIIM");
                     if(estat==4) {
                         estat=1;
                     } else {
-                        estat=estatAnterior+1;
-                        System.out.println("error ULTIIIIIM");
+                        estat=estatAnterior+1;  
                     }
-                //}
+                }
                 vehicle.steer(0.f);
                 error=false;
             }
@@ -294,19 +290,19 @@ public class Rival {
         } else {
             System.out.println("ANGLEEEEE error ="+angleActual);
             error=true;
-            if (angleActual<350.f && angleActual > 10.f){           
-                //if (seguent==true) {
-                    pasPuntFinal= false;
-                    rectificarRectaAEsquerra=false;
-                    rectificarRectaADreta=false;
+            if (angleActual<350.f && angleActual > 10.f){  
+                rectificarRectaAEsquerra=false; /*estiguem rectificant una recta o girant una curva avisem que ja estem*/
+                rectificarRectaADreta=false;
+                if (seguent==true) {    /*si es tracta d'una curva anem al estat seguent*/
+                    pasPuntFinal= false;    /*aquesta variable controla si hem pogut arribar al punt de desti*/
+                    System.out.println("error ULTIIIIIM");
                     if(estat==4) {
                         estat=1;
                     } else {
-                        estat=estatAnterior+1;
-                        System.out.println("error ULTIIIIIM");
+                        estat=estatAnterior+1;  
                     }
-                //}
-                vehicle.steer(0.f);
+                }
+                vehicle.steer(0.f); /*deixem de girar i reinciciem el error de rodes*/
                 error=false;
             }
             System.out.println("rectificant error de rodeeees");        
@@ -314,7 +310,7 @@ public class Rival {
         
     }
     
-    public float calcular_angle_direccions (Vector3f pto) {
+    public float calcular_angle_direccions (Vector3f pto) { /*calcula el angle entre el rival i la direccio ideal*/
         dirActual.setX(this.getVehicle().getLinearVelocity().getX());
         dirActual.setY(this.getVehicle().getLinearVelocity().getZ());
         dirActual = dirActual.normalize();
@@ -333,7 +329,7 @@ public class Rival {
         }
     }
     
-    public void reset_rival(Vector3f pto) {
+    public void reset_rival(Vector3f pto) { /*resetejem el rival al punt de partida en cas de que es quedi bloquejat*/
         vehicle.setPhysicsLocation(new Vector3f (0,-5,0));
         vehicle.setPhysicsRotation(new Matrix3f());
         vehicle.setLinearVelocity(Vector3f.ZERO);
@@ -348,7 +344,7 @@ public class Rival {
         rectificarRectaADreta=false;
     }
     
-    public void rutina() {
+    public void rutina() {  /* cada cas representa una recta*/
         switch (estat) {
             case 1:
                 Vector3f puntAnterior = new Vector3f(5.f, -5.f,-55.f);
