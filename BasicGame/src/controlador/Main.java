@@ -148,8 +148,7 @@ public class Main extends SimpleApplication implements ActionListener {
          //Aqui creem la classe rival i la afegim al rootNode
         rival = new Rival(getAssetManager(), getPhysicsSpace(), world);
         rival.buildCar();
-        rival.getVehicle().setPhysicsLocation(new Vector3f(0f,-5.f,-10.f));//posem el rival al terra (-4)
-        rival.getVehicle().accelerate(5.f);
+        rival.situar_graella(new Vector3f(0f,-5.f,-10.f));      /* inclueix el build car i situarlo correctament*/
         
         display = new Display(assetManager,settings,guiNode,this.timer);
         
@@ -223,11 +222,17 @@ public class Main extends SimpleApplication implements ActionListener {
         } else if (binding.equals("Reset")) {
             if (value) {
                 System.out.println("Reset");
-                car.getVehicle().setPhysicsLocation(Vector3f.ZERO);
+                car.getVehicle().setPhysicsLocation(new Vector3f(0f,-5.f,0f));          /* no vull que el cotxe caigi del cel quan reseteji*/
                 car.getVehicle().setPhysicsRotation(new Matrix3f());
                 car.getVehicle().setLinearVelocity(Vector3f.ZERO);
                 car.getVehicle().setAngularVelocity(Vector3f.ZERO);
                 car.getVehicle().resetSuspension();
+            } else {
+            }
+        } else if (binding.equals("Space")) {               /*afegim un nou reset pel rival amb l'SAPCE*/
+            if (value) {
+                System.out.println("Reset Rival");
+                rival.reset_rival(rival.puntInici);
             } else {
             }
         }
@@ -261,10 +266,9 @@ public class Main extends SimpleApplication implements ActionListener {
         camNode.lookAt(car.getSpatial().getWorldTranslation(), Vector3f.UNIT_Y);
         
         camNode.setLocalTranslation(car.getSpatial().localToWorld( new Vector3f( 0, 4, -15), null));
-        //System.out.println(car.getVehicle().getPhysicsLocation());
         /*Codi per a moure el rival, cal moure-ho d'aqui*/
-        if(comprovaMoviment()==true) {
-            rival.rutina();
+        if(comprovaMoviment()==true) {      /*depen de la tecla up del prota*/
+            rival.rutina2();
         }
         updateDisplay();
     }
