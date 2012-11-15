@@ -75,7 +75,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private float steeringValue = 0;
     private float accelerationValue = 0;
     private VehicleProtagonista car;
-    private Rival rival;
+    private Rival rival1;
     private WorldCreator world;
     private Spatial sceneModel;
     private final float accelerationForce = 1000.0f;
@@ -97,6 +97,10 @@ public class Main extends SimpleApplication implements ActionListener {
     public Vector2f r = new Vector2f(1.0f,0.1f);
     float angle;
     private boolean start= false;
+    private Vector3f puntInici1= new Vector3f(0f,-5.f,-10.f);
+    private Vector3f puntInici2= new Vector3f(4f,-5.f,-10.f);
+    private Vector3f puntInici3= new Vector3f(0f, -5.f,-10.f);
+    
     
     public static void main(String[] args) {
         Main app = new Main();
@@ -146,9 +150,9 @@ public class Main extends SimpleApplication implements ActionListener {
         car.buildCar();
         car.getVehicle().setPhysicsLocation(new Vector3f(0f,-5.f,0f));  //posem el cotxe al terra (-4)
          //Aqui creem la classe rival i la afegim al rootNode
-        rival = new Rival(getAssetManager(), getPhysicsSpace(), world);
-        rival.buildCar();
-        rival.situar_graella(new Vector3f(0f,-5.f,-10.f));      /* inclueix el build car i situarlo correctament*/
+        rival1 = new Rival(getAssetManager(), getPhysicsSpace(), world,puntInici1,2);
+        rival1.buildCar();
+        rival1.situar_graella(new Vector3f(0f,-5.f,-10.f));      /* inclueix el build car i situarlo correctament*/
         
         display = new Display(assetManager,settings,guiNode,this.timer);
         
@@ -156,7 +160,7 @@ public class Main extends SimpleApplication implements ActionListener {
         rootNode.attachChild(car.getSpatial());
         
         //Añadimos Rival
-        rootNode.attachChild(rival.getSpatial());
+        rootNode.attachChild(rival1.getSpatial());
         
         //Settejem la camera
         
@@ -232,7 +236,7 @@ public class Main extends SimpleApplication implements ActionListener {
         } else if (binding.equals("Space")) {               /*afegim un nou reset pel rival amb l'SAPCE*/
             if (value) {
                 System.out.println("Reset Rival");
-                rival.reset_rival(rival.puntInici);
+                rival1.reset_rival();
             } else {
             }
         }
@@ -268,7 +272,7 @@ public class Main extends SimpleApplication implements ActionListener {
         camNode.setLocalTranslation(car.getSpatial().localToWorld( new Vector3f( 0, 4, -15), null));
         /*Codi per a moure el rival, cal moure-ho d'aqui*/
         if(comprovaMoviment()==true) {      /*depen de la tecla up del prota*/
-            rival.rutina2();
+            rival1.moureRival();
         }
         updateDisplay();
     }

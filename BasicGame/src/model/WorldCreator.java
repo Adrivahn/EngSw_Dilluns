@@ -156,8 +156,8 @@ public class WorldCreator {
         space.getPhysicsSpace().add(boundsModel);
         
         //wall creation
-        //crearMur(-2,-5,10);
-        //crearMur(-55,-5,-15);
+        crearMur(-2,-5,10);
+        crearMur(-55,-5,-15);
 
         //Obstacle creation
         crearCaixa(2,-2,-10);

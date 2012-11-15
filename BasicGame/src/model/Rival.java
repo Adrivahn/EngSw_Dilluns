@@ -47,19 +47,35 @@ public class Rival {
     private boolean pasPuntFinal= false;        //per a controlar que segueixi recitifcant quan toca
     private boolean rectificarRectaAEsquerra=false;
     private boolean rectificarRectaADreta=false;
-    public Vector3f puntInici= new Vector3f(0f,-5.f,-10.f);
+    private Vector3f puntInici;
+    private int nivellIA;
     private Vector3f puntAnterior;
     private Vector3f puntFinal;
     private Vector3f puntSeguent;
     
     
     //Constructor
-    public Rival(AssetManager asset, PhysicsSpace phy,WorldCreator w){          /*la idea es passar el world on contingi a la llarga les coordenades del mon*/
+    public Rival(AssetManager asset, PhysicsSpace phy,WorldCreator w,Vector3f punt,int nivell){          /*la idea es passar el world on contingi a la llarga les coordenades del mon*/
         assetManager = asset;
         physicsSpace = phy;
         world = w;
+        puntInici= punt;
+        nivellIA=nivell;
     }
     
+    public void moureRival () {
+        if (nivellIA == 1) {
+            rutina1();
+        }else if (nivellIA == 2) {
+            rutina2();
+        } else {
+            System.out.println("Error en el nivellIA, per defecte nivell 1 assignat");
+            rutina1();
+        }
+    }
+    public Vector3f getPuntInici () {
+        return puntInici;
+    }
     private Geometry findGeom(Spatial spatial, String name) {
         if (spatial instanceof Node) {
             Node node = (Node) spatial;
@@ -171,7 +187,7 @@ public class Rival {
     }
     
     public void situar_graella (Vector3f pto) {
-        this.reset_rival(puntInici);
+        this.reset_rival();
         this.getVehicle().setPhysicsLocation(new Vector3f(0f,-5.f,-10.f)); /*posem el rival al terra (-5) i darrera del prota -10*/
         this.getVehicle().accelerate(1.f);  /*necessari pk te velocitat negativa involuntariament i intrepreta k ha de rectificar girant*/
     }
@@ -254,28 +270,26 @@ public class Rival {
         //System.out.println("angleeeee="+angleActual);
         if ((errorEsquerra==false) && (angleActual<352.f && angleActual > 8.f)){ 
         /*el error es un error imposible d'evitar ja que quan calcules la direccio del cotxe medeix la direccio de les rodes i si estic girant s'incrementa inevitablement amb 10º aproximadament*/
-                System.out.println("angleeeee ="+angleActual);
+                //System.out.println("angleeeee ="+angleActual);
                 girarCurvaDreta();   
         /*per lo tant girarem fins a arribar a 0º i despres continuarem girant fins a aconseguir el error calculat a ull*/
         } else {
             /*aqui es suposa que està rectificant el error de les rodes ja que està casi encarat del tot*/
-            girarCurvaDreta();
-            System.out.println("ANGLEEEEE error ="+angleActual);
-            errorEsquerra=true;
+            //System.out.println("ANGLEEEEE error ="+angleActual);
+                errorEsquerra=true;
             if (angleActual<350.f && angleActual > 10.f){           
                 /*si hem aconseguit corregir l'error parem de girar i avisem que ja no estem modificant la direccio*/
                 rectificarRectaAEsquerra=false; /*estiguem rectificant una recta o girant una curva avisem que ja estem*/
                 rectificarRectaADreta=false;
                 if (seguent==true) {    /*si es tracta d'una curva anem al estat seguent*/
                     pasPuntFinal= false;    /*aquesta variable controla si hem pogut arribar al punt de desti*/
-                    System.out.println("error ULTIIIIIM");
+                   // System.out.println("error ULTIIIIIM");
                     estat=estatAnterior+1;  
                 }
                 vehicle.steer(0.f);
                 errorEsquerra=false;
-                errorDreta=false;
             }
-            System.out.println("rectificant error de rodeeees");        
+            //System.out.println("rectificant error de rodeeees");        
         }  
     }
 
@@ -283,26 +297,23 @@ public class Rival {
         float angleActual = calcular_angle_direccions(pto); /*nou angle despres de girar*/
         //System.out.println("angleeeee="+angleActual);
         if ((errorDreta==false) && (angleActual<352.f && angleActual > 8.f)){
-                System.out.println("angleeeee ="+angleActual);
+                //System.out.println("angleeeee ="+angleActual);
                 girarCurvaEsquerra();    
         } else {
-            System.out.println("Rectificant l'error que  provoca les rodes al estar girades");    
-            System.out.println("Angle dins derror ="+angleActual);
-            if (angleActual>=0) {
-                errorDreta=true;
-            }
+            //System.out.println("Rectificant l'error que  provoca les rodes al estar girades");    
+            //System.out.println("Angle dins derror ="+angleActual);
+            errorDreta=true;       
             if (angleActual<350.f && angleActual > 10.f){  
                 rectificarRectaAEsquerra=false; /*estiguem rectificant una recta o girant una curva avisem que ja estem*/
                 rectificarRectaADreta=false;
                 if (seguent==true) {    /*si es tracta d'una curva anem al estat seguent*/
                     pasPuntFinal= false;    /*aquesta variable controla si hem pogut arribar al punt de desti*/
-                    System.out.println("Ultima lectura d'angle.");
+                    //System.out.println("Ultima lectura d'angle.");
                     estat=estatAnterior+1; 
                     
                 }
                 vehicle.steer(0.f); /*deixem de girar i reinciciem el error de rodes*/
                 errorDreta=false;
-                errorEsquerra=false;
             }        
         }    
     }
@@ -327,8 +338,8 @@ public class Rival {
         }
     }
     
-    public void reset_rival(Vector3f pto) { /*resetejem el rival al punt de partida en cas de que es quedi bloquejat*/
-        vehicle.setPhysicsLocation(pto);
+    public void reset_rival() { /*resetejem el rival al punt de partida en cas de que es quedi bloquejat*/
+        vehicle.setPhysicsLocation(puntInici);
         vehicle.setPhysicsRotation(new Matrix3f());
         vehicle.setLinearVelocity(new Vector3f(0f,0f,0.1f));    /*al reiniciar el coche inevitablement tira enderrere molt molt poc i el vector direccio es 180 i no interesa i ho corregim*/
         vehicle.setAngularVelocity(Vector3f.ZERO);
@@ -344,7 +355,7 @@ public class Rival {
         rectificarRectaADreta=false;        
     }
     
-    public void rutina1() {  /* cada cas representa una recta*/
+    private void rutina1() {  /* cada cas representa una recta*/
         switch (estat) {
             
             case 1:
@@ -353,30 +364,30 @@ public class Rival {
                 Vector3f puntSeguent = new Vector3f(-55.f, -5.f,42.f);  /*pto cap a on haura d'anar despres d'arribal al punt final*/
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<2 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 1 i començarem a girar");
+                    //System.out.println("Hem arribat al punt de control del pto 1 i començarem a girar");
                     if (angle<=180) {
-                        System.out.println("Girem a la dreta al pto 1");
+                        //System.out.println("Girem a la dreta al pto 1");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
                     }
                     if (angle>180) {
-                        System.out.println("Girem a la esquerra al pto 1");
+                        //System.out.println("Girem a la esquerra al pto 1");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
                     
                 } else if ((angle>20.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true && angle>20.f && angle<179.f)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto1 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del pto1 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<340.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 1 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del pto 1 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -389,30 +400,30 @@ public class Rival {
                 puntSeguent = new Vector3f(-55.f, -5.f,-55.f);
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 2 i començarem a girar");
+                    //System.out.println("Hem arribat al punt de control del pto 2 i començarem a girar");
                     if (angle<=180) {
-                        System.out.println("Girem a la dreta al pto 2");
+                        //System.out.println("Girem a la dreta al pto 2");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
                     }
                     if (angle>180) {
-                        System.out.println("Girem a la esquerra al pto 2");
+                        //System.out.println("Girem a la esquerra al pto 2");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
                     
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 2 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del pto 2 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 2 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del pto 2 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -424,30 +435,30 @@ public class Rival {
                 puntSeguent = new Vector3f(0.f, -5.f,-60.f);
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 3 i començarem a girar");
+                    //System.out.println("Hem arribat al punt de control del pto 3 i començarem a girar");
                     if (angle<=180) {
-                        System.out.println("Girem a la dreta al pto 3");
+                        //System.out.println("Girem a la dreta al pto 3");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
                     }
                     if (angle>180) {
-                        System.out.println("Girem a la esquerra al pto 3");
+                        //System.out.println("Girem a la esquerra al pto 3");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
                     
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 3 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del pto 3 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 3 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del pto 3 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -459,30 +470,30 @@ public class Rival {
                 puntSeguent = new Vector3f(0.f, -5.f,40.f); 
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 4 i començarem a girar");
+                    //System.out.println("Hem arribat al punt de control del pto 4 i començarem a girar");
                     if (angle<=180) {
-                        System.out.println("Girem a la dreta al pto 4");
+                        //System.out.println("Girem a la dreta al pto 4");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
                     }
                     if (angle>180) {
-                        System.out.println("Girem a la esquerra al pto 4");
+                        //System.out.println("Girem a la esquerra al pto 4");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
                     
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 4 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del pto 4 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 4 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del pto 4 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -496,7 +507,7 @@ public class Rival {
         }
     }
     
-    public void rutina2() {  /* cada cas representa una recta*/
+    private void rutina2() {  /* cada cas representa una recta*/
         switch (estat) {
             case 1:
                 puntAnterior = new Vector3f(5.f, -5.f,-55.f); /*punt interesant per a resetejarlo a la ultima curva o punt de control en cas de blokeig futur*/
@@ -505,29 +516,28 @@ public class Rival {
                 angle = calcular_angle_direccions(puntFinal);
                 System.out.println(angle);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=10.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 8 i començarem a girar");
-                    if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 8 cap al pto 1");
+                    //System.out.println("Hem arribat al punt de control del punt 1 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 1 cap al punt 2");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 8 cap al pto 1");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 1 cap al punt 2");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
-                    }
-                    
+                    }    
                 } else if ((angle>20.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a la recta del pto 8 girant a la dreta");
+                    //System.out.println("Rectifiquem a la recta del punt 1 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<340.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 8 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 1 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -539,29 +549,28 @@ public class Rival {
                 puntSeguent = new Vector3f(-25.f, -5.f,47.f);  /*pto cap a on haura d'anar despres d'arribal al punt final*/
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<2 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=10.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 1 i començarem a girar");
-                    if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 1");
+                    //System.out.println("Hem arribat al punt de control del punt 2 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 2 cap al punt 3");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 1");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 2 cap al punt 3");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
-                    
                 } else if ((angle>20.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 1 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del punt 2 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<340.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 1 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 2 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -574,29 +583,28 @@ public class Rival {
                 puntSeguent = new Vector3f(-55.f, -5.f,42.f);  /*pto cap a on haura d'anar despres d'arribal al punt final*/
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<2 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 2 i començarem a girar");
-                    if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 2");
+                    //System.out.println("Hem arribat al punt de control del punt 2 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 2 cap al punt 3");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 2");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 2 cap al punt 3");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
-                    }
-                    
+                    } 
                 } else if ((angle>20.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 2 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del punt 3 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<340.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 2 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 3 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -608,29 +616,28 @@ public class Rival {
                 puntSeguent = new Vector3f(-61.f, -5.f,-15f);
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 3 i començarem a girar");
-                    if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 3");
+                    //System.out.println("Hem arribat al punt de control del punt 4 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 4 cap al punt 5 ");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 3");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 4 cap al punt 5");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
-                    }
-                    
+                    }    
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 3 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del punt 4 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 3 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 4 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -642,29 +649,28 @@ public class Rival {
                 puntSeguent = new Vector3f(-55.f, -5.f,-55.f);
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 4 i començarem a girar");
-                    if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 4");
+                    //System.out.println("Hem arribat al punt de control del punt 5 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 5 cap al punt 6");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 4");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 5 cap al punt 6");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
-                    }
-                    
+                    }              
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 4 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del punt 5 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 4 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 5 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -676,29 +682,29 @@ public class Rival {
                 puntSeguent = new Vector3f(-22.f, -5.f,-60.f);
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 5 i començarem a girar");
-                    if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 5");
+                    //System.out.println("Hem arribat al punt de control del punt 6 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 6 cap al punt 7");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 5");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 6 cap al punt 7");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
                     
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 5 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del punt 6 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 5 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 6 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -710,29 +716,28 @@ public class Rival {
                 puntSeguent = new Vector3f(5.f, -5.f,-55.f);
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 6 i començarem a girar");
-                   if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 6");
+                    //System.out.println("Hem arribat al punt de control del pto 7 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 7 cap al punt 8");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 6");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 7 cap al punt 8");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
-                    
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a recta del pto 6 girant a la dreta");
+                    //System.out.println("Rectifiquem a recta del punt 7 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 6 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 7 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
@@ -744,29 +749,28 @@ public class Rival {
                 puntSeguent = new Vector3f(13.f, -5.f,12.f); 
                 angle = calcular_angle_direccions(puntFinal);
                 if (vehicle.getLinearVelocity().length()<3 && enMoviment==true) {
-                    reset_rival(puntInici);
+                    reset_rival();
                 }
                 if (this.getDistancia(puntFinal)<=12.f || pasPuntFinal==true) {     /*si hem arribat a la curva o pto de control girem al seguent punt*/
                     rectificarRectaADreta=false;    /*si estem rectificant pero arribaem ala curva ja no ho posem a false perke no rectiki a la cuirva actual sino a la seguent*/
                     rectificarRectaAEsquerra=false;
                     pasPuntFinal= true;         /*hem arribat  ala curva si ens passem de larea del pto de control seguirem girant*/
                     angle = calcular_angle_direccions(puntSeguent);
-                    System.out.println("Hem arribat al punt de control del pto 7 i començarem a girar");
-                   if ((angle<=180 && errorEsquerra==false && errorDreta==false)|| errorEsquerra==true) {
-                        System.out.println("Girem a la dreta al pto 7");
+                    //System.out.println("Hem arribat al punt de control del punt 8 i començarem a girar");
+                    if ((angle<=180 && errorDreta==false)|| errorEsquerra==true) {
+                        //System.out.println("Girem a la dreta al punt 8 cap al punt 1");
                         rectificarDesviacioEsquerra(estat,puntSeguent,true);
-                    } else if ((angle > 180 && errorDreta==false && errorEsquerra==false)|| errorDreta==true) {
-                        System.out.println("Girem a la esquerra al pto 7");
+                    } else if ((angle > 180 && errorEsquerra==false)|| errorDreta==true) {
+                        //System.out.println("Girem a la esquerra al punt 8 cap al punt 1");
                         rectificarDesviacioDreta(estat,puntSeguent,true);
                     }
-                    
                 } else if ((angle>30.f && pasPuntFinal == false && angle<179.f) || (rectificarRectaADreta==true)) { /*si encara no hem arribat al pto de control i ens desviem rectifiquem*/
                     rectificarRectaADreta=true;
-                    System.out.println("Rectifiquem a la recta del pto 7 girant a la dreta");
+                    //System.out.println("Rectifiquem a la recta del punt 8 girant a la dreta");
                     rectificarDesviacioEsquerra(estat,puntFinal,false);
                 } else if ((angle<330.f && pasPuntFinal == false && angle>=181.f) || (rectificarRectaAEsquerra==true)) {
                     rectificarRectaAEsquerra=true;
-                    System.out.println("Rectifiquem a la recta del pto 7 girant a la esquerra");
+                    //System.out.println("Rectifiquem a la recta del punt 8 girant a la esquerra");
                     rectificarDesviacioDreta(estat,puntFinal,false);
                 } else {            /*sino hem arribat al pto de control i anem amb la direccio correcta ens movem endavant*/
                     moureEndavant();
