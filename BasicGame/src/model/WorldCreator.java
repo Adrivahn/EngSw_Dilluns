@@ -61,7 +61,9 @@ public class WorldCreator {
     private Material mat_rain;
     private Material mat_bounds;
     private Spatial roadModel;
-
+    
+    // tester !!
+   private int escenari;
     /**
      * creates a simple physics test world with a floor, an obstacle and some test boxes
      * @param rootNode
@@ -75,13 +77,102 @@ public class WorldCreator {
         this.space = space;
         this.viewPort = viewPort;
         obstacleList = new ArrayList<Geometry>();
-        initMaterial();
-        createWorld();
+       
+        createWorld2();
+       // createWorld1();
         
     }
+    private void createWorld1(){
+        escenari = 1;
+        initMaterial1();
+    //Afegim la llum
+        DirectionalLight sun = new DirectionalLight();
+        Vector3f lightDir=new Vector3f(-0.37352666f, -0.50444174f, -0.7784704f);
+        sun.setDirection(lightDir);
+        sun.setColor(ColorRGBA.White.clone().multLocal(2));
+        //AmbientLight sun = new AmbientLight();
+        //sun.setColor(ColorRGBA.LightGray);
+        rootNode.addLight(sun);
+        
+        brick = new Box(Vector3f.ZERO, bLength, bHeight, bWidth);
+        brick.scaleTextureCoordinates(new Vector2f(1f, .5f));
+        
+        //Afegim boira
+        //initBoira();
+        
+        //Afegim ombres
+        BasicShadowRenderer bsr = new BasicShadowRenderer(assetManager, 256);
+        bsr.setDirection(new Vector3f(-0.37352666f, -0.50444174f, -0.7784704f)); // light direction
+        viewPort.addProcessor(bsr); 
+        
+        //Afegim el cel
+        Node sky = new Node();
+        sky.attachChild(SkyFactory.createSky(assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
+        rootNode.attachChild(sky);
+        
+        //Road creation
+        // We load the scene
+        Spatial sceneModel = assetManager.loadModel("Models/AngularRoad/AngularRoad.j3o");
+        sceneModel.setLocalTranslation(0, -5, 0);
+        sceneModel.scale(10,0.25f,10);
+        sceneModel.setMaterial(mat_road);
+
+        //We load the limits of the scene
+        Spatial boundsModel = assetManager.loadModel("Models/AngularRoad/InvisibleWalls/InvisibleWalls.scene");
+        boundsModel.setLocalTranslation(0, -5, 0);
+        boundsModel.scale(10,10,10);
+        boundsModel.setMaterial(mat_bounds);
+        
+        
+        // We set up collision detection for the scene by creating a
+        // compound collision shape and a static RigidBodyControl with mass zero.
+        CollisionShape sceneShape =
+                CollisionShapeFactory.createMeshShape((Node) sceneModel);
+        RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0);
+        sceneModel.addControl(landscape);
+        sceneModel.setShadowMode(ShadowMode.Receive);
+        
+        // We set up collision detection for the walls.
+        CollisionShape boundsShape =
+                CollisionShapeFactory.createMeshShape((Node) boundsModel);
+        RigidBodyControl limits = new RigidBodyControl(boundsShape, 0);
+        boundsModel.addControl(limits);
+        boundsModel.setQueueBucket(RenderQueue.Bucket.Transparent);
+
+
+        // We attach the scene  and its limits to the rootNode and the physics space,
+        // to make them appear in the game world.
+        rootNode.attachChild(sceneModel);
+        space.getPhysicsSpace().add(sceneModel);
+        rootNode.attachChild(boundsModel);
+        space.getPhysicsSpace().add(boundsModel);
+        
+        //wall creation
+        crearMur(-2,-5,10);
+        crearMur(-55,-5,-15);
+
+        //Obstacle creation
+        crearCaixa(2,-2,-10);
+        crearCaixa(2,-2,-50);
+        crearCaixa(-25,-2,-50);
+        crearCaixa(-50,-2,-50);
+        crearCaixa(-25,-2,-25);
+        crearCaixa(-50,-2,0);
+        crearCaixa(-50,-2,50);
+        crearCaixa(-50,-2,25);
+        crearCaixa(0,-2,50);
+
+        //Creem el efecte de neu
+        //initNeu();
+        
+        
+        //Creem el efecte de pluja
+        initPluja();
+    }
     
-    
-    private void createWorld() {        
+    private void createWorld2() {
+        escenari = 2;
+         initMaterial2();
         //Afegim la llum
         DirectionalLight sun = new DirectionalLight();
         Vector3f lightDir=new Vector3f(-0.37352666f, -0.50444174f, -0.7784704f);
@@ -272,7 +363,40 @@ public class WorldCreator {
         obstacleList.add(obstacleModel);
     }
     
-    private void initMaterial() {
+    private void initMaterial2() {
+        
+        mat_road = new Material( 
+            assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat_road.setTexture("ColorMap", 
+            assetManager.loadTexture("Textures/RoadTexture.jpg"));
+        
+        mat_bounds = new Material(
+                assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat_bounds.setTexture("ColorMap",
+                assetManager.loadTexture("Textures/transparentTexture.png"));
+        mat_bounds.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+        mat_bounds.setTransparent(true);
+
+        mat_brick = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        TextureKey key2 = new TextureKey("Textures/ladrillo2.jpg");
+        key2.setGenerateMips(true);
+        Texture tex2 = assetManager.loadTexture(key2);
+        mat_brick.setTexture("ColorMap", tex2);
+        
+        mat_box = new Material( 
+            assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        mat_box.setTexture("DiffuseMap", 
+            assetManager.loadTexture("Textures/BoxTexture.jpg"));
+        
+        mat_snow = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+        mat_snow.setTexture("Texture", assetManager.loadTexture("Textures/snow.png"));
+        
+        mat_rain = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+        mat_rain.setTexture("Texture", assetManager.loadTexture("Textures/teardrop.png"));
+
+    }
+    
+    public void initMaterial1() {
         
         mat_road = new Material( 
             assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -328,10 +452,20 @@ public class WorldCreator {
     }
 
     public Vector3f getInitialPos(){
-        return new Vector3f(-10, 0, 80); // lloc on comenca el cotxe
-    }
+        if ( escenari == 2){return new Vector3f(-10, 0, 80);} // lloc on comenca el cotxe
+        else if(escenari  == 1){
+            return new Vector3f(0, 4, -15);}
+        else{
+            return new Vector3f(0, 0, 0);
+        }
+        }
     
     public Quaternion getInitialRot(){
+        if (escenari ==2){
         return new Quaternion().fromAngles(0, (float)Math.toRadians(-90), 0);
     }
+        else if( escenari == 1){
+             return new Quaternion().fromAngles(0, (float)Math.toRadians(0), 0);
+        }
+         return new Quaternion().fromAngles(0, (float)Math.toRadians(-90), 0);
 }
