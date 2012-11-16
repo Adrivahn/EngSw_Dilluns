@@ -78,8 +78,8 @@ public class WorldCreator {
         this.viewPort = viewPort;
         obstacleList = new ArrayList<Geometry>();
        
-        createWorld2();
-       // createWorld1();
+       // createWorld2();
+        createWorld1();
         
     }
     private void createWorld1(){
@@ -167,13 +167,13 @@ public class WorldCreator {
         
         
         //Creem el efecte de pluja
-        initPluja();
+       // initPluja();
     }
     
     private void createWorld2() {
         escenari = 2;
-         initMaterial2();
-        //Afegim la llum
+        initMaterial2();
+         //Afegim la llum
         DirectionalLight sun = new DirectionalLight();
         Vector3f lightDir=new Vector3f(-0.37352666f, -0.50444174f, -0.7784704f);
         sun.setDirection(lightDir);
@@ -200,20 +200,9 @@ public class WorldCreator {
         
         //Road creation
         // We load the scene
-        // circuit 1
-        Spatial sceneModel = assetManager.loadModel("Models/AngularRoad/AngularRoad.j3o"); // carrega circuit 2
-        sceneModel.setLocalTranslation(0, -5, 0); // posicio del cotxe circuit 2
+        Spatial sceneModel = assetManager.loadModel("Models/StraightRoad/Ciutat/StraightRoad.j3o");
+        sceneModel.setLocalTranslation(0, -5, 0);
         sceneModel.scale(20,20,20);
-        
-        
-        
-        //circuit 2
-       /* Spatial sceneModel = assetManager.loadModel("Models/StraightRoad/Ciutat/StraightRoad.j3o"); // carrega circuit 2
-        sceneModel.setLocalTranslation(0, -5, 0); // posicio del cotxe circuit 2
-        sceneModel.scale(20,20,20);
-        */
-        
-        
         //sceneModel.setMaterial(mat_road);
         
         // We set up collision detection for the scene by creating a
@@ -281,7 +270,7 @@ public class WorldCreator {
         
         
         //Creem el efecte de pluja
-        initPluja();
+        //initPluja();
     }
     
     private void initNeu() {
@@ -468,4 +457,5 @@ public class WorldCreator {
              return new Quaternion().fromAngles(0, (float)Math.toRadians(0), 0);
         }
          return new Quaternion().fromAngles(0, (float)Math.toRadians(-90), 0);
+}
 }
