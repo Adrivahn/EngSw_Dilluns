@@ -10,6 +10,7 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.CameraNode;
@@ -55,6 +56,8 @@ public class Main extends SimpleApplication implements ActionListener {
     }
     
     private RigidBodyControl landscape;
+     private Vector3f initialPos;
+    private Quaternion initialRot;
 
     private void setupKeys() {
         inputManager.addMapping("Lefts", new KeyTrigger(KeyInput.KEY_LEFT));
@@ -264,7 +267,11 @@ public class Main extends SimpleApplication implements ActionListener {
     private void addProtagonista(){
         car = new VehicleProtagonista(getAssetManager(), getPhysicsSpace(), cam);
         car.buildCar(menu.getCarColorRGBA(),menu.getCarColorRGBA());
-        car.getVehicle().setPhysicsLocation(new Vector3f(0.f,-4.f,0.f));
+         initialPos = world.getInitialPos();
+        initialRot = world.getInitialRot();
+        //Trasladamos el coche protagonista a su posición de salida
+        car.getVehicle().setPhysicsLocation(initialPos);
+        car.getVehicle().setPhysicsRotation(initialRot);
         
         //Añadimos el coche protagonista
         rootNode.attachChild(car.getSpatial());
