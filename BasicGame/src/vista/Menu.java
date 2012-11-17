@@ -6,22 +6,25 @@ import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
+import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 import com.jme3.system.AppSettings;
-import com.jme3.system.Timer;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.button.ButtonControl;
 import de.lessvoid.nifty.elements.Element;
+import de.lessvoid.nifty.elements.render.ImageRenderer;
 import de.lessvoid.nifty.elements.render.TextRenderer;
+import de.lessvoid.nifty.render.NiftyImage;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
+import java.util.ArrayList;
 
 public class Menu extends AbstractAppState implements ScreenController {
 
   private Nifty nifty;
   private Application app;
   private Screen screen;
-  private boolean isGameStarted;  
+  private boolean isMenuFinished;  
   private final AudioNode menu_sound;
   private int numEnemies;
   private int initNumEnemies;
@@ -39,10 +42,64 @@ public class Menu extends AbstractAppState implements ScreenController {
   private int maxNumVolume;
   private int numVolume;
   private AppSettings settings;
+  private ArrayList<Car> cars = new ArrayList<Car>();  
+  private int actualCar;
+  private ArrayList<CarColor> colors = new ArrayList<CarColor>();
+  private int actualColor;
+  private ArrayList<Circuit> circuits = new ArrayList<Circuit>();
+  private int actualCircuit;
+  private int actualWeather;
+  private ArrayList<Weather> weathers = new ArrayList<Weather>();
+  private String imagesPath;
+  
+  private class Car{
+      private String carName;
+      private String carImageFileName;
+      private String imageExtension;
+      
+      public Car(String carName,String carImageFileName, String imageExtension){
+          this.carName = carName;
+          this.carImageFileName = carImageFileName;
+          this.imageExtension = imageExtension;
+      }  
+  }
+  
+  private class Weather{
+      private String weatherName;
+      private String weatherImageFilename;
+      
+      public Weather(String weatherName, String weatherImageFilename){
+          this.weatherName = weatherName;
+          this.weatherImageFilename = weatherImageFilename;
+      }
+  } 
+  
+  private class CarColor{
+      private String colorName;
+      private ColorRGBA colorRGBA;      
+      
+      public CarColor(String colorName,ColorRGBA colorRGBA){
+          this.colorName = colorName;
+          this.colorRGBA = colorRGBA;
+      }  
+  }
+  
+  private class Circuit{
+      private String circuitName;
+      private String circuitImageFileName;
+      private String imageExtension;
+      
+      public Circuit(String circuitName,String circuitImageFileName,String imageExtension){
+          this.circuitName = circuitName;
+          this.circuitImageFileName = circuitImageFileName;
+          this.imageExtension = imageExtension;
+      }              
+  }
   
 
-  public Menu(AppSettings settings,AssetManager manager, Node rootNode, SimpleApplication main,boolean debugInfo,int initNumEnemies,int minNumEnemies, int maxNumEnemies,int initNumLaps, int minNumLaps, int maxNumLaps,int initNumVolume, int minNumVolume, int maxNumVolume) {
-      isGameStarted = false;
+  public Menu(AppSettings settings,AssetManager manager, Node rootNode, SimpleApplication main,boolean debugInfo,int initNumEnemies,int minNumEnemies, int maxNumEnemies,int initNumLaps, int minNumLaps, int maxNumLaps,int initNumVolume, int minNumVolume, int maxNumVolume,int initCar, int initCarColor,int initWeather,int initCircuit) {
+      this.imagesPath = "Interface/Menu/"; 
+      isMenuFinished = false;
       
       this.settings = settings;      
       
@@ -71,19 +128,37 @@ public class Menu extends AbstractAppState implements ScreenController {
       //Quitamos la informacion de debug por defecto
       this.main.setDisplayFps(this.debugInfo); // to hide the FPS
       this.main.setDisplayStatView(this.debugInfo); // to hide the statistics 
+  
+      cars.add(new Car("coche1","coche1",".jpg"));
+      cars.add(new Car("coche2","coche2",".jpeg"));
+     
+      colors.add(new CarColor("Rojo",new ColorRGBA(255,0,0,128)));
+      colors.add(new CarColor("Verde",new ColorRGBA(0,255,0,128)));
+      colors.add(new CarColor("Azul",new ColorRGBA(0,0,255,128)));      
+      
+      weathers.add(new Weather("Soleado","sol"));
+      weathers.add(new Weather("Lluvioso","lluvia"));
+      
+      circuits.add(new Circuit("Montmelo","circuito1",".jpg"));
+      circuits.add(new Circuit("Jerez","circuito2",".jpg"));
+      
+      actualCar = initCar;
+      actualColor = initCarColor;
+      actualWeather = initWeather;
+      actualCircuit = initCircuit;
   }
 
   public void startGame() {      
-    isGameStarted = true;    
+    isMenuFinished = true;    
     menu_sound.stop();    
-    nifty.exit();  // switch to another screen    
+    nifty.exit();      
   }
   
-  public void controlsScreen(String mode){
+  public void gotoScreenCarSelect(String mode){
       this.mode=mode;
-      gotoScreen("controls");
+      nifty.gotoScreen("coches");
   }
-  
+    
   public void gotoScreen(String screen){
       nifty.gotoScreen(screen);      
   }  
@@ -92,8 +167,8 @@ public class Menu extends AbstractAppState implements ScreenController {
     app.stop();
   }
   
-  public boolean isGameStarted(){
-      return isGameStarted;
+  public boolean isMenuFinished(){
+      return isMenuFinished;
   }
 
   public String getPlayerName() {
@@ -169,6 +244,138 @@ public class Menu extends AbstractAppState implements ScreenController {
     }  
     this.main.setDisplayFps(this.debugInfo); 
     this.main.setDisplayStatView(this.debugInfo); 
+  }
+  
+  public String getCarImagePath(){
+      return imagesPath+cars.get(actualCar).carImageFileName+colors.get(actualColor).colorName+cars.get(actualCar).imageExtension;       
+  }
+  
+  public String getCarName(){
+      return cars.get(actualCar).carName;
+  }
+  
+  public void setCar(String scroll){
+      
+      if (scroll.equals("-")){
+          actualCar = actualCar -1;          
+      }
+      else{
+          actualCar= actualCar +1;          
+      }      
+      
+      if(actualCar >= cars.size()){
+          actualCar = 0;
+      }
+      else if (actualCar < 0){
+          actualCar = cars.size()-1;
+      }      
+      
+      // first load the new image
+      NiftyImage newImage = nifty.getRenderEngine().createImage(this.getCarImagePath(), false); // false means don't linear filter the image, true would apply linear filtering
+
+      // find the element with it's id
+      Element element = screen.findElementByName("carImage");
+
+      // change the image with the ImageRenderer
+      element.getRenderer(ImageRenderer.class).setImage(newImage); 
+  }
+  
+  public void setCarColor(String scroll){
+      if(scroll.equals("-")){
+          actualColor=actualColor-1;
+      }
+      else{
+          actualColor=actualColor+1;
+      }
+      
+      if(actualColor >= colors.size()){
+          actualColor=0;
+      }
+      else if(actualColor < 0){
+          actualColor= colors.size()-1;
+      }
+      
+      Element colorText = nifty.getCurrentScreen().findElementByName("colorText");
+      colorText.getRenderer(TextRenderer.class).setText(colors.get(actualColor).colorName);
+      
+      // first load the new image
+      NiftyImage newImage = nifty.getRenderEngine().createImage(this.getCarImagePath(), false); // false means don't linear filter the image, true would apply linear filtering
+
+      // find the element with it's id
+      Element element = screen.findElementByName("carImage");
+
+      // change the image with the ImageRenderer
+      element.getRenderer(ImageRenderer.class).setImage(newImage); 
+      
+  }
+  
+  public String getCarColorName(){      
+      return colors.get(actualColor).colorName;
+  }
+  
+  public ColorRGBA getCarColorRGBA(){
+      return colors.get(actualColor).colorRGBA;
+  }
+  
+  public String getWeatherName(){
+      return weathers.get(actualWeather).weatherName;
+  }
+  
+  public void setWeather(String scroll){
+      if(scroll.equals("-")){
+          actualWeather=actualWeather-1;
+      }
+      else{
+          actualWeather=actualWeather+1;
+      }
+      
+      if(actualWeather >= weathers.size()){
+          actualWeather=0;
+      }
+      else if(actualWeather < 0){
+          actualWeather= weathers.size()-1;
+      }
+      
+      Element weatherText = nifty.getCurrentScreen().findElementByName("weatherText");
+      weatherText.getRenderer(TextRenderer.class).setText(weathers.get(actualWeather).weatherName);
+      
+       // first load the new image
+      NiftyImage newImage = nifty.getRenderEngine().createImage(this.getCircuitImagePath(), false); // false means don't linear filter the image, true would apply linear filtering
+
+      // find the element with it's id
+      Element element = screen.findElementByName("circuitImage");
+
+      // change the image with the ImageRenderer
+      element.getRenderer(ImageRenderer.class).setImage(newImage);
+ }
+  
+  public void setCircuit(String scroll){
+      if (scroll.equals("-")){
+          actualCircuit = actualCircuit -1;          
+      }
+      else{
+          actualCircuit = actualCircuit +1;          
+      }      
+      
+      if(actualCircuit >= circuits.size()){
+          actualCircuit = 0;
+      }
+      else if (actualCircuit < 0){
+          actualCircuit = circuits.size()-1;
+      }     
+      
+      // first load the new image
+      NiftyImage newImage = nifty.getRenderEngine().createImage(this.getCircuitImagePath(), false); // false means don't linear filter the image, true would apply linear filtering
+
+      // find the element with it's id
+      Element element = screen.findElementByName("circuitImage");
+
+      // change the image with the ImageRenderer
+      element.getRenderer(ImageRenderer.class).setImage(newImage);
+  }
+  
+  public String getCircuitImagePath(){
+      return imagesPath+circuits.get(actualCircuit).circuitImageFileName+weathers.get(actualWeather).weatherImageFilename+circuits.get(actualCircuit).imageExtension;       
   }  
   
   public int getNumLaps(){

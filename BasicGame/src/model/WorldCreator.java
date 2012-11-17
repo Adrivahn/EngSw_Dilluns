@@ -17,6 +17,8 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Matrix3f;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
@@ -50,6 +52,7 @@ public class WorldCreator {
     private AssetManager assetManager;
     private BulletAppState space;
     private ViewPort viewPort;
+    private ArrayList<Geometry> obstacleList;
     
     private Material mat_road;
     private Material mat_brick;
@@ -57,13 +60,7 @@ public class WorldCreator {
     private Material mat_snow;
     private Material mat_rain;
     private Material mat_bounds;
-    
-    public Vector3f[] coordenadesLimitEsquerraRecta1 = new Vector3f[10];
-    public ArrayList coordenadesLimitEsquerraRecta2 = new ArrayList();
-    public ArrayList coordenadesLimitEsquerraRecta3 = new ArrayList();
-    public ArrayList coordenadesLimitEsquerraRecta4 = new ArrayList();
-    public ArrayList coordenadesCurvesRecta1=new ArrayList();
-   
+    private Spatial roadModel;
 
     /**
      * creates a simple physics test world with a floor, an obstacle and some test boxes
@@ -77,23 +74,14 @@ public class WorldCreator {
         this.assetManager = assetManager;
         this.space = space;
         this.viewPort = viewPort;
+        obstacleList = new ArrayList<Geometry>();
         initMaterial();
-        this.coordenadesLimitEsquerraRecta1[0]=new Vector3f(15.f, -5.f, 35.f);
-        this.coordenadesLimitEsquerraRecta1[1]=new Vector3f(15.f, -5.f, 20.f);
-        this.coordenadesLimitEsquerraRecta1[2]=new Vector3f(15.f, -5.f, 5.f);
-        this.coordenadesLimitEsquerraRecta1[3]=new Vector3f(15.f, -5.f, -10.f);
-        this.coordenadesLimitEsquerraRecta1[4]=new Vector3f(15.f, -5.f, -25.f);
-        this.coordenadesLimitEsquerraRecta1[5]=new Vector3f(15.f, -5.f, -40.f);
-        this.coordenadesCurvesRecta1.add(new Vector3f (0.f, -5.f,40.f));
-        this.coordenadesCurvesRecta1.add(new Vector3f(-55.f,-5.f,40.f));
-        this.coordenadesCurvesRecta1.add(new Vector3f(-55.f, -5.f,-55.f));
-        this.coordenadesCurvesRecta1.add(new Vector3f(0.f,-5.f,-55.f));
-        
+        createWorld();
         
     }
     
     
-    public void createWorld() {        
+    private void createWorld() {        
         //Afegim la llum
         DirectionalLight sun = new DirectionalLight();
         Vector3f lightDir=new Vector3f(-0.37352666f, -0.50444174f, -0.7784704f);
@@ -121,16 +109,10 @@ public class WorldCreator {
         
         //Road creation
         // We load the scene
-        Spatial sceneModel = assetManager.loadModel("Models/AngularRoad/AngularRoad.j3o");
+        Spatial sceneModel = assetManager.loadModel("Models/StraightRoad/Ciutat/StraightRoad.j3o");
         sceneModel.setLocalTranslation(0, -5, 0);
-        sceneModel.scale(10,0.25f,10);
-        sceneModel.setMaterial(mat_road);
-
-        //We load the limits of the scene
-        Spatial boundsModel = assetManager.loadModel("Models/AngularRoad/InvisibleWalls/InvisibleWalls.scene");
-        boundsModel.setLocalTranslation(0, -5, 0);
-        boundsModel.scale(10,10,10);
-        boundsModel.setMaterial(mat_bounds);
+        sceneModel.scale(20,20,20);
+        //sceneModel.setMaterial(mat_road);
         
         // We set up collision detection for the scene by creating a
         // compound collision shape and a static RigidBodyControl with mass zero.
@@ -139,21 +121,43 @@ public class WorldCreator {
         RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0);
         sceneModel.addControl(landscape);
         sceneModel.setShadowMode(ShadowMode.Receive);
-        
-        // We set up collision detection for the walls.
-        CollisionShape boundsShape =
-                CollisionShapeFactory.createMeshShape((Node) boundsModel);
-        RigidBodyControl limits = new RigidBodyControl(boundsShape, 0);
-        boundsModel.addControl(limits);
-        boundsModel.setQueueBucket(RenderQueue.Bucket.Transparent);
-
 
         // We attach the scene  and its limits to the rootNode and the physics space,
         // to make them appear in the game world.
         rootNode.attachChild(sceneModel);
         space.getPhysicsSpace().add(sceneModel);
-        rootNode.attachChild(boundsModel);
-        space.getPhysicsSpace().add(boundsModel);
+        
+        //We load the limits of the scene
+        /*Spatial boundsModel = assetManager.loadModel("Models/AngularRoad/InvisibleWalls/InvisibleWalls.scene");
+        boundsModel.setLocalTranslation(0, -5, 0);
+        boundsModel.scale(10,10,10);
+        boundsModel.setMaterial(mat_bounds);
+         
+        // We set up collision detection for the walls.
+        CollisionShape boundsShape =
+                CollisionShapeFactory.createMeshShape((Node) boundsModel);
+        RigidBodyControl limits = new RigidBodyControl(boundsShape, 0);
+        boundsModel.addControl(limits);
+        boundsModel.setQueueBucket(RenderQueue.Bucket.Transparent);*/
+        
+        //rootNode.attachChild(boundsModel);
+        //space.getPhysicsSpace().add(boundsModel);
+        
+        //We load the limits of the scene
+        roadModel = assetManager.loadModel("Models/StraightRoad/Carretera/StraightRoad.j3o");
+        roadModel.setLocalTranslation(0, -5, 0);
+        roadModel.scale(20,0.25f,20);
+        roadModel.setMaterial(mat_road);
+         
+        // We set up collision detection for the walls.
+        CollisionShape roadShape =
+                CollisionShapeFactory.createMeshShape((Node) roadModel);
+        RigidBodyControl limits = new RigidBodyControl(roadShape, 0);
+        roadModel.addControl(limits);
+        
+        rootNode.attachChild(roadModel);
+        space.getPhysicsSpace().add(roadModel);
+        
         
         //wall creation
         crearMur(-2,-5,10);
@@ -178,7 +182,7 @@ public class WorldCreator {
         initPluja();
     }
     
-    public void initNeu() {
+    private void initNeu() {
         snow = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 1000);
         snow.setMaterial(mat_snow);
         snow.setImagesX(2); snow.setImagesY(2); // 2x2 texture animation
@@ -196,7 +200,7 @@ public class WorldCreator {
         rootNode.attachChild(snow);
     }
     
-    public void initPluja() {
+    private void initPluja() {
         rain = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 100000);
         rain.setMaterial(mat_rain);
         //rain.setParticlesPerSec(50);
@@ -215,7 +219,7 @@ public class WorldCreator {
         rootNode.attachChild(rain);
     }
     
-    public void initBoira() {
+    private void initBoira() {
         FilterPostProcessor fpp=new FilterPostProcessor(assetManager);
         FogFilter fog=new FogFilter();
         fog.setFogColor(new ColorRGBA(0.9f, 0.9f, 0.9f, 1.0f));
@@ -232,7 +236,7 @@ public class WorldCreator {
         viewPort.addProcessor(fpp);*/
     }
     
-    public void crearMur(int x, int y, int z) {
+    private void crearMur(int x, int y, int z) {
         float startpt = bLength / 4;
         float height = 0;
         for (int j = 0; j < 10; j++) {
@@ -245,7 +249,7 @@ public class WorldCreator {
         }
     }
     
-    public void crearCaixa(int x, int y, int z) {
+    private void crearCaixa(int x, int y, int z) {
         Box obstacleBox = new Box(1,1,1);
         Geometry obstacleModel = new Geometry("Obstacle", obstacleBox);
         obstacleModel.setLocalTranslation(x, y, z);
@@ -254,9 +258,10 @@ public class WorldCreator {
         obstacleModel.setShadowMode(ShadowMode.CastAndReceive);
         rootNode.attachChild(obstacleModel);
         space.getPhysicsSpace().add(obstacleModel);
+        obstacleList.add(obstacleModel);
     }
     
-    public void initMaterial() {
+    private void initMaterial() {
         
         mat_road = new Material( 
             assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -289,7 +294,7 @@ public class WorldCreator {
 
     }
 
-    public void addBrick(Vector3f ori) {
+    private void addBrick(Vector3f ori) {
 
         Geometry reBoxg = new Geometry("brick", brick);
         reBoxg.setMaterial(mat_brick);
@@ -300,6 +305,22 @@ public class WorldCreator {
         reBoxg.getControl(RigidBodyControl.class).setFriction(0.6f);
         rootNode.attachChild(reBoxg);
         space.getPhysicsSpace().add(reBoxg);
+        obstacleList.add(reBoxg);
+    }
+    
+    public ArrayList<Geometry> getObstacles(){
+        return obstacleList;
+    }
+    
+    public Spatial getCarretera(){
+        return roadModel;
     }
 
+    public Vector3f getInitialPos(){
+        return new Vector3f(-10, 0, 80); // lloc on comenca el cotxe
+    }
+    
+    public Quaternion getInitialRot(){
+        return new Quaternion().fromAngles(0, (float)Math.toRadians(-90), 0);
+    }
 }
