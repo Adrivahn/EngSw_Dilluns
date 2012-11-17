@@ -249,9 +249,11 @@ public class VehicleProtagonista {
         float valueBrake;
         if(!handBrakeMode){
             if (value) {
+                System.out.println("reverse mode 1");
                 reverse();
             } else {
                 reverseMode = false;
+                System.out.println("reverse mode 2");
                 vehicle.accelerate(0f);
                 brake(0f);
             }
@@ -280,11 +282,11 @@ public class VehicleProtagonista {
         if (getSpeed() > 5) {
             valueBrake = brakeForce / brakeForceFactor;
             brake(valueBrake);
-        }else{
-            reverseMode = true;
-            accelerationValue -= (accelerationForce * reverseFactor);
-            vehicle.accelerate(accelerationValue);
         }
+        reverseMode = true;
+        accelerationValue -= (accelerationForce * reverseFactor);
+        vehicle.accelerate(accelerationValue);
+        
     }
 
     public void brake(float valueBrake) {
