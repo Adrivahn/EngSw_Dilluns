@@ -341,7 +341,7 @@ public class VehicleProtagonista {
 
     public float getSpeed(){
         //return vehicle.getLinearVelocity().length();
-        System.out.println("Speed "+vehicle.getCurrentVehicleSpeedKmHour());
+        //System.out.println("Speed "+vehicle.getCurrentVehicleSpeedKmHour());
         return vehicle.getCurrentVehicleSpeedKmHour();
         //return (float)Math.sqrt((Math.pow(vehicle.getLinearVelocity().x,2)+Math.pow(vehicle.getLinearVelocity().z,2)+Math.pow(vehicle.getLinearVelocity().y,2)));
     }
@@ -350,9 +350,13 @@ public class VehicleProtagonista {
         float speed;
         speed = getSpeed();
         if((reverseMode) && (speed < maxReverseVelocity)){
-            vehicle.accelerate(1f);
-        }else if((!reverseMode) && (speed > maxAccelerateVelocity)){
-            vehicle.accelerate(1f);
+            Vector3f vec = vehicle.getLinearVelocity();
+            //vec.x = vec.x - 1;
+            vehicle.setAngularVelocity(vec);
+        }else if((!reverseMode) && (speed > maxAccelerateVelocity) && (forwardMode)){
+            Vector3f vec = vehicle.getLinearVelocity();
+            //vec.x = vec.x - 1;
+            vehicle.setAngularVelocity(vec);
         }
     }
 }
