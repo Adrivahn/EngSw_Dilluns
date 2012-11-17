@@ -352,11 +352,11 @@ public class VehicleProtagonista {
         if((reverseMode) && (speed < maxReverseVelocity)){
             Vector3f vec = vehicle.getLinearVelocity();
             //vec.x = vec.x - 1;
-            vehicle.setAngularVelocity(vec);
+            vehicle.setLinearVelocity(vec);
         }else if((!reverseMode) && (speed > maxAccelerateVelocity) && (forwardMode)){
             Vector3f vec = vehicle.getLinearVelocity();
             //vec.x = vec.x - 1;
-            vehicle.setAngularVelocity(vec);
+            vehicle.setLinearVelocity(vec);
         }
     }
 }
