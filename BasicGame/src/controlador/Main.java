@@ -107,22 +107,48 @@ public class Main extends SimpleApplication implements ActionListener {
         return bulletAppState.getPhysicsSpace();
     }
 
-    public void onAction(String binding, boolean value, float tpf) {
+     public void onAction(String binding, boolean value, float tpf) {
         if (binding.equals("Lefts")) {
-            car.turnLeft(value);
+            if (value) {
+                steeringValue += .5f;
+            } else {
+                steeringValue += -.5f;
+            }
+            car.getVehicle().steer(steeringValue);
         } else if (binding.equals("Rights")) {
-            car.turnRight(value);
+            if (value) {
+                steeringValue += -.5f;
+            } else {
+                steeringValue += .5f;
+            }
+            car.getVehicle().steer(steeringValue);
         } else if (binding.equals("Ups")) {
-            car.forward(value);
+            if (value) {
+                accelerationValue += (accelerationForce*accelerationFactor);
+            } else {
+                accelerationValue -= (accelerationForce*accelerationFactor);
+            }
+            System.out.println("Accelerar "+accelerationValue);
+            System.out.println("AcceleraForce "+accelerationForce);
+            car.getVehicle().accelerate(accelerationValue);
         } else if (binding.equals("Downs")) {
-            car.back(value);
+            if (value) {
+                car.getVehicle().brake(brakeForce/brakeForceFactor);
+            } else {
+                car.getVehicle().brake(0f);
+            }
         } else if (binding.equals("Reset")) {
-            car.reset(value);
-        }else if (binding.equals("Space")) {
-            car.handBrake(value);
+            if (value) {
+                System.out.println("Reset");
+                car.getVehicle().setPhysicsLocation(initialPos);
+                car.getVehicle().setPhysicsRotation(initialRot);
+                car.getVehicle().setLinearVelocity(Vector3f.ZERO);
+                car.getVehicle().setAngularVelocity(Vector3f.ZERO);
+                car.getVehicle().resetSuspension();
+            } else {
+            }
         }
-        
-    }     
+    }
     
     /*Metode per comprovar que el cotxe protagonista esta en moviment*/
     public boolean comprovaMoviment (){
