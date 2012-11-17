@@ -56,6 +56,9 @@ public class VehicleProtagonista {
     private boolean reverseMode = false;
     private boolean handBrakeMode  = false;
     private boolean forwardMode = false;
+    
+    private int maxAccelerateVelocity = 120;
+    private int maxReverseVelocity = -50;
 
     public VehicleProtagonista(AssetManager asset, PhysicsSpace phy, Camera cam) {
         assetManager = asset;
@@ -286,7 +289,6 @@ public class VehicleProtagonista {
         reverseMode = true;
         accelerationValue -= (accelerationForce * reverseFactor);
         vehicle.accelerate(accelerationValue);
-        
     }
 
     public void brake(float valueBrake) {
@@ -337,8 +339,20 @@ public class VehicleProtagonista {
         return reverseMode;
     }
 
-    public float getSpeed() {
-        return vehicle.getLinearVelocity().length();
+    public float getSpeed(){
+        //return vehicle.getLinearVelocity().length();
+        System.out.println("Speed "+vehicle.getCurrentVehicleSpeedKmHour());
+        return vehicle.getCurrentVehicleSpeedKmHour();
         //return (float)Math.sqrt((Math.pow(vehicle.getLinearVelocity().x,2)+Math.pow(vehicle.getLinearVelocity().z,2)+Math.pow(vehicle.getLinearVelocity().y,2)));
+    }
+    
+    public void upDateMaxSpeed(){
+        float speed;
+        speed = getSpeed();
+        if((reverseMode) && (speed < maxReverseVelocity)){
+            vehicle.accelerate(1f);
+        }else if((!reverseMode) && (speed > maxAccelerateVelocity)){
+            vehicle.accelerate(1f);
+        }
     }
 }

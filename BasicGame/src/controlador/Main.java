@@ -332,8 +332,8 @@ public class Main extends SimpleApplication implements ActionListener {
             default:
                 
         }
-        
-
+       
+        car.upDateMaxSpeed();
         updateDisplay();
     }
 }

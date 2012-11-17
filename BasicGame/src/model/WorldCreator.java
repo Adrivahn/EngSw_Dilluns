@@ -104,7 +104,8 @@ public class WorldCreator {
         // We load the scene
         Spatial sceneModel = assetManager.loadModel("Models/AngularRoad/AngularRoad.j3o");
         sceneModel.setLocalTranslation(0, -5, 0);
-        sceneModel.scale(10,0.25f,10);
+       // sceneModel.scale(10,0.25f,10);
+        sceneModel.scale(2000,10f,10);
         sceneModel.setMaterial(mat_road);
 
         //We load the limits of the scene
