@@ -58,6 +58,12 @@ public class VehicleProtagonista {
     private boolean handBrakeMode  = false;
     private boolean forwardMode = false;
     
+    private Audio accelerate_sound;
+    private Audio decelerate_sound;
+    private Audio max_velocity_sound;
+    private Audio brake_sound;
+    private Audio idling_car_sound;
+    
     private int maxAccelerateVelocity = 120;
     private int maxReverseVelocity = -50;
 
@@ -192,7 +198,8 @@ public class VehicleProtagonista {
         //rootNode.attachChild(vehicleNode);
 
         physicsSpace.add(vehicle);
-
+        
+        initAudio();
         //set forward camera node that follows the character
         //camNode = new CameraNode("CamNode", cam);
         //camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
@@ -205,6 +212,15 @@ public class VehicleProtagonista {
 
 
     }
+     public void initAudio() {
+        accelerate_sound = new Audio(vehicleNode, assetManager, "accelerate_sound.wav");
+        decelerate_sound = new Audio(vehicleNode, assetManager, "decelerate_sound.wav");
+        max_velocity_sound = new Audio(vehicleNode, assetManager, "max_velocity_sound.wav", true);
+        brake_sound = new Audio(vehicleNode, assetManager, "brake_sound.wav");
+        idling_car_sound = new Audio(vehicleNode, assetManager, "idling_car_sound.wav", true);
+    }
+    
+    
     public VehicleControl getVehicle() {
         return vehicle;
     }

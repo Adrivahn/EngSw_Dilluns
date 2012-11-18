@@ -63,6 +63,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.control.CameraControl.ControlDirection;
 import com.jme3.scene.shape.Cylinder;
+import model.Audio;
 import model.VehicleProtagonista;
 import model.WorldCreator;
 import vista.Display;
@@ -94,6 +95,11 @@ public class Main extends SimpleApplication implements ActionListener {
     public Vector3f direccioRival;
     public Vector2f r = new Vector2f(1.0f,0.1f);
     float angle;
+    
+    private Audio menu_music;
+    private Audio starting_car_sound;
+    private Audio rain_sound;
+    private Audio must_destroy;
     
     public static void main(String[] args) {
         Main app = new Main();
@@ -222,6 +228,7 @@ public class Main extends SimpleApplication implements ActionListener {
             return false;
         }
     }
+   
     @Override
     public void simpleUpdate(float tpf) {
         flyCam.setEnabled(false);
