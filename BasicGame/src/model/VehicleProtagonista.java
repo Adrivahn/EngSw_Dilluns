@@ -343,7 +343,7 @@ public class VehicleProtagonista {
 
     public float getSpeed(){
         //return vehicle.getLinearVelocity().length();
-        //System.out.println("Speed "+vehicle.getCurrentVehicleSpeedKmHour());
+        //System.out.println("Speed "+vehicle.getCurrentVehicleSpeedKmHours());
         return vehicle.getCurrentVehicleSpeedKmHour();
         //return (float)Math.sqrt((Math.pow(vehicle.getLinearVelocity().x,2)+Math.pow(vehicle.getLinearVelocity().z,2)+Math.pow(vehicle.getLinearVelocity().y,2)));
     }
